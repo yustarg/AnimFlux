@@ -3,7 +3,7 @@ using UnityEngine.Playables;
 
 namespace AnimFlux
 {
-    public class AFGraphHost : IDisposable
+    public sealed class AFGraphHost : IDisposable
     {
         public PlayableGraph Graph { get; private set; }
         public bool IsInitialized { get; private set; }

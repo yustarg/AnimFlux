@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 
 namespace AnimFlux
 {
-    public class AFRoot : IDisposable
+    public sealed class AFRoot : IDisposable
     {
         public AnimationLayerMixerPlayable LayerMixer { get; private set; }
         public AnimationPlayableOutput Output { get; private set; }
@@ -27,7 +27,7 @@ namespace AnimFlux
             return this;
         }
 
-        public void SeyLayerWeight(int layerIndex, float weight)
+        public void SetLayerWeight(int layerIndex, float weight)
         {
             if (!IsInitialized) return;
             LayerMixer.SetInputWeight(layerIndex, Mathf.Clamp01(weight));
