@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Playables;
 
-namespace AnimFlux
+namespace AnimFlux.Runtime
 {
     public sealed class AFGraphHost : IDisposable
     {

@@ -1,0 +1,103 @@
+---
+alwaysApply: true
+---
+
+# ================================
+# 项目基础信息
+# ================================
+- 本项目使用 Unity 6000.2.9f1，脚本语言为 C#。
+- 动画系统必须基于 Playables（PlayableGraph / AnimationPlayableOutput），不要使用遗留的 Animation 组件。
+- Animator 主要用作：
+  - Avatar / Humanoid 配置
+  - Root Motion 来源
+  - IK 回调（OnAnimatorIK）入口（如有需要）
+- 动画控制逻辑不要依赖 Animator Controller 的复杂状态机，只保留简单的「底层应急状态机」或「过渡用 State」。
+
+# ================================
+# 命名空间与目录规范
+# ================================
+- 所有运行时动画系统相关代码放在命名空间：AnimFlux.Runtime
+- 编辑器工具放在命名空间：AnimFlux.Editor
+- 常用目录结构（如果需要新建文件，优先使用这些目录）：
+  - Assets/AnimFlux/Runtime/Core
+  - Assets/AnimFlux/Runtime/Playables
+  - Assets/AnimFlux/Runtime/IK
+  - Assets/AnimFlux/Editor/Inspectors
+  - Assets/AnimFlux/Editor/Windows
+
+# ================================
+# PlayableGraph 使用规范
+# ================================
+- 必须使用以下核心类型组合：
+  - PlayableGraph
+  - AnimationPlayableOutput
+  - AnimationLayerMixerPlayable
+  - AnimationMixerPlayable（同一层内混合）
+  - ScriptPlayable<T>（例如用于事件、IK、约束等自定义行为）
+
+# ================================
+# 分层动画（Layered Animation）规范
+# ================================
+- 分层必须基于 AnimationLayerMixerPlayable。
+- 每一层应有清晰的职责，例如：
+  - BaseLayer：基础 locomotion（站立、行走、跑步、跌落）
+  - UpperBodyLayer：上半身动作（开枪、挥刀、施法），叠加在 BaseLayer 上
+  - AdditiveLayer：例如呼吸、受伤等叠加姿势
+  - IKLayer：用于 IK 修正（如果采用 Playables 方式）
+
+- 建议为层定义一个枚举：
+  - enum AnimationLayerType { Base, UpperBody, Additive, IK }
+
+# ================================
+# IK 规范
+# ================================
+- IK 可以有两种实现路径：
+  1. 使用 Animator 的 IK 回调（OnAnimatorIK）配合参数；此时 IK 不在 PlayableGraph 中实现，只是数据由动画系统提供。
+  2. 使用 Playables 扩展（例如 ScriptPlayable<IKBehaviour>），在图中进行姿势修正。
+
+- 当生成 IK 相关代码时，优先按以下思路：
+  - 有一个 IKLayer 或 IKModule 负责：
+    - 接收目标（Target Transform）
+    - 控制权重（例如 手部IK、脚部IK）
+    - 提供接口：SetLookAtTarget, SetHandIKTarget, SetFootIKTarget 等。
+  - IK 的权重控制可以通过：
+    - 单独一层（AdditiveLayer）结合 AvatarMask
+    - 或在 OnAnimatorIK 中设置 Animator.SetIKPosition/Weight
+
+- 生成代码时，请遵守：
+  - 不要在任意业务脚本中随意直接改 Animator IK；
+  - 尽量通过统一的 IK 接口（如 CharacterIKController 或 IKLayer）来操作。
+
+# ================================
+# Locomotion 规范
+# ================================
+- locomotion（移动相关）必须作为一个独立模块/层：LocomotionLayer 或 BaseLocomotionLayer。
+- 该层负责：
+  - 从游戏逻辑接收移动速度、目标方向、是否在地面等参数。
+  - 将这些参数转化为实际播放的动画（站立、慢走、跑步、转向等）。
+  - 处理 Root Motion（可开关）：优先使用 Animator.applyRootMotion 搭配 Playables。
+
+- 生成 Locomotion 相关代码时：
+  - 提供方法：
+    - SetMoveSpeed(float speed)
+    - SetMoveDirection(Vector3 direction)
+    - SetIsGrounded(bool grounded)
+  - 在 Update 中使用平滑插值（Mathf.Lerp / SmoothDamp）处理速度和 Blend 参数，避免动画抖动。
+
+- 不要将输入处理（例如读取 Input System）写进 LocomotionLayer 内部。
+  - 输入应在角色控制脚本中处理，再将整理好的移动意图传给 LocomotionLayer。
+
+# ================================
+# 动画事件（Animation Events）规范
+# ================================
+- 不要在 Clip 上到处直接加 Unity 的 AnimationEvent，避免难以追踪。
+- 优先选择以下任一模式实现事件系统：
+  1. 使用自定义 ScriptPlayable<AnimationEventBehaviour>：
+     - 通过曲线 / 标记数据（如 ScriptableObject）驱动事件。
+  2. 如果必须使用 AnimationEvent 则：
+     - 统一由一个 AnimationEventRelay/AnimationEventDispatcher 脚本接收，再分发到系统内。
+
+- 动画事件的处理方式：
+  - 使用一个统一接口，如 IAnimationEventHandler：
+    - void OnAnimationEvent(string eventName, float normalizedTime);
+  - CharacterAnimationController 或某个模块实现这个接口，事件只向

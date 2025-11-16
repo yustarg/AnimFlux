@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Playables;
 
-namespace AnimFlux
+namespace AnimFlux.Runtime
 {
     public enum AFBlendMode { Override = 0, Additive = 1 }
     
