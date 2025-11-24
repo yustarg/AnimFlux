@@ -6,34 +6,73 @@ namespace AnimFlux.Samples
     public class AFGraphSample : MonoBehaviour
     {
         public Animator animator;
+        [Header("Base Layer Clips")]
         public AnimationClip clipA;
         public AnimationClip clipB;
+
+        [Header("Upper Body Layer")]
+        public AvatarMask upperBodyMask;
+        public AnimationClip upperBodyClip;
+        public float upperBodyTriggerInterval = 4f;
+        public float upperBodyActiveDuration = 1.5f;
+        public float upperBodyFadeDuration = 0.25f;
+        
         private AFGraph _graph;
-        private int _layer;
-        private float _timer;
+        private int _baseLayer;
+        private int _upperBodyLayer;
+        private float _baseTimer;
+        private float _upperBodyTimer;
+        private float _upperBodyActiveTime;
+        private bool _playingA = true;
+        private bool _upperBodyPlaying;
 
         private void Start()
         {
             if (!animator) animator = GetComponent<Animator>();
             _graph = AFGraph.Create(animator);
-            _layer = _graph.AddLayer("BaseLayer");
+            _baseLayer = _graph.AddLayer("BaseLayer");
+            _upperBodyLayer = _graph.AddLayer("UpperBodyLayer", upperBodyMask, 0f, AFBlendMode.Override);
             if (clipA)
-                _graph.PlayClip(_layer, clipA, 0f, 0f);
+                _graph.PlayClip(_baseLayer, clipA, 0f, 0f);
         }
 
         private void Update()
         {
-            _timer += Time.deltaTime;
-            // Alternate between clipA and clipB every 3 seconds.
-            if (_timer > 3f)
+            if (clipA && clipB)
             {
-                _timer = 0f;
-                if (clipA && clipB)
+                _baseTimer += Time.deltaTime;
+                if (_baseTimer >= 3f)
                 {
-                    if (UnityEngine.Random.value > 0.5f)
-                        _graph.PlayClip(_layer, clipA, 0f, 0.2f);
-                    else
-                        _graph.PlayClip(_layer, clipB, 0f, 0.2f);
+                    _baseTimer = 0f;
+                    _playingA = !_playingA;
+                    var target = _playingA ? clipA : clipB;
+                    _graph.PlayClip(_baseLayer, target, 0f, 0.2f);
+                }
+            }
+
+            UpdateUpperBodyLayer();
+        }
+
+        private void UpdateUpperBodyLayer()
+        {
+            if (!upperBodyClip) return;
+            _upperBodyTimer += Time.deltaTime;
+            if (_upperBodyTimer >= upperBodyTriggerInterval)
+            {
+                _upperBodyTimer = 0f;
+                _upperBodyPlaying = true;
+                _upperBodyActiveTime = 0f;
+                _graph.SetLayerWeightSmooth(_upperBodyLayer, 1f, upperBodyFadeDuration);
+                _graph.PlayClip(_upperBodyLayer, upperBodyClip, 0f, 0.1f);
+            }
+
+            if (_upperBodyPlaying)
+            {
+                _upperBodyActiveTime += Time.deltaTime;
+                if (_upperBodyActiveTime >= upperBodyActiveDuration)
+                {
+                    _graph.SetLayerWeightSmooth(_upperBodyLayer, 0f, upperBodyFadeDuration);
+                    _upperBodyPlaying = false;
                 }
             }
         }

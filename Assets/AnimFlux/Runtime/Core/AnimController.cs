@@ -130,6 +130,19 @@ namespace AnimFlux.Runtime
             _graph.SetLayerWeight(index, Mathf.Clamp01(weight));
         }
 
+        public void SetLayerWeight(AnimationLayerType layerType, float weight, float fadeDuration)
+        {
+            if (!_layerLookup.TryGetValue(layerType, out var index) || _graph == null) return;
+            if (fadeDuration <= 0.0001f)
+            {
+                _graph.SetLayerWeight(index, Mathf.Clamp01(weight));
+            }
+            else
+            {
+                _graph.SetLayerWeightSmooth(index, Mathf.Clamp01(weight), Mathf.Max(0f, fadeDuration));
+            }
+        }
+
         public float GetLayerWeight(AnimationLayerType layerType)
         {
             if (!_layerLookup.TryGetValue(layerType, out var index) || _graph == null) return 0f;

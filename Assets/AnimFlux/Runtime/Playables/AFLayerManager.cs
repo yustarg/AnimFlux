@@ -11,6 +11,7 @@ namespace AnimFlux.Runtime
         private PlayableGraph _graph;
         private readonly AFRoot _root;
         private readonly List<AFLayer> _layers = new(4);
+        private readonly AFLayerWeightController _weightController;
         
         public int Count => _layers.Count;
 
@@ -18,6 +19,7 @@ namespace AnimFlux.Runtime
         {
             _graph = graph;
             _root = root;
+            _weightController = new AFLayerWeightController(graph, root);
         }
 
         public int AddLayer(string name, AvatarMask mask = null, float weight = 1f, AFBlendMode mode = AFBlendMode.Override)
@@ -27,7 +29,7 @@ namespace AnimFlux.Runtime
             
             var mixer = AnimationMixerPlayable.Create(_graph, 2);
             _graph.Connect(mixer, 0, _root.LayerMixer, layerIndex);
-            _root.SetLayerWeight(layerIndex, weight);
+            _weightController.RegisterLayer(layerIndex, weight);
             if (mask != null) _root.SetLayerMask(layerIndex, mask);
             _root.SetLayerAdditive(layerIndex, mode == AFBlendMode.Additive);
             
@@ -45,7 +47,13 @@ namespace AnimFlux.Runtime
         public void SetLayerWeight(int layerIndex, float weight)
         {
             ValidateLayer(layerIndex);
-            _root.SetLayerWeight(layerIndex, weight);
+            _weightController.SetWeight(layerIndex, weight);
+        }
+
+        public void SetLayerWeightSmooth(int layerIndex, float weight, float fadeDuration)
+        {
+            ValidateLayer(layerIndex);
+            _weightController.SetWeightSmooth(layerIndex, weight, fadeDuration);
         }
 
         public float GetLayerWeight(int layerIndex)
@@ -81,6 +89,7 @@ namespace AnimFlux.Runtime
                 _layers[i].Dispose();
             }
             _layers.Clear();
+            _weightController?.Dispose();
         }
     }
 }

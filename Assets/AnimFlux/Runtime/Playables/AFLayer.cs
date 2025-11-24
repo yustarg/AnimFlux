@@ -41,7 +41,7 @@ namespace AnimFlux.Runtime
             nextPlayable.SetApplyPlayableIK(true);
             nextPlayable.SetTime(Mathf.Clamp01(normalizedTime) * Math.Max(clip.length, 0.0001f));
             nextPlayable.SetSpeed(1f);
-            nextPlayable.SetDuration(clip.length);
+            nextPlayable.SetDuration(clip.isLooping ? double.PositiveInfinity : clip.length);
 
             if (!_current.IsValid())
             {

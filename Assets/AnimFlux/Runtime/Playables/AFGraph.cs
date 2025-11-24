@@ -31,6 +31,7 @@ namespace AnimFlux.Runtime
             => Layers.PlayClip(layerIndex, clip, normalizedTime, crossFadeDuration);
 
         public void SetLayerWeight(int layerIndex, float weight) => Layers.SetLayerWeight(layerIndex, weight);
+        public void SetLayerWeightSmooth(int layerIndex, float weight, float fadeDuration) => Layers.SetLayerWeightSmooth(layerIndex, weight, fadeDuration);
         public float GetLayerWeight(int layerIndex) => Layers.GetLayerWeight(layerIndex);
         public void SetLayerAdditive(int layerIndex, bool additive) => Layers.SetLayerAdditive(layerIndex, additive);
         public void SetLayerMask(int layerIndex, AvatarMask mask) => Layers.SetLayerMask(layerIndex, mask);
