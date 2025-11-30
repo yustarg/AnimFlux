@@ -1,3 +1,6 @@
 {
-	"name": "AnimFlux.Editor"
+	"name": "AnimFlux.Editor",
+	"references": [
+		"NewAssembly"
+	]
 }

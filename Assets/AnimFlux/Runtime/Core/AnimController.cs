@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Playables;
 
 namespace AnimFlux.Runtime
 {
@@ -91,6 +92,7 @@ namespace AnimFlux.Runtime
             if (!_isInitialized) return;
             _eventRouter?.Dispose();
             _eventRouter = null;
+            _locomotionLayer?.Dispose();
             _locomotionLayer = null;
             _ikController = null;
             _layerLookup.Clear();
@@ -111,10 +113,15 @@ namespace AnimFlux.Runtime
             var locomotionConfig = config ? config.LocomotionConfig : null;
             if (locomotionConfig && _layerLookup.TryGetValue(AnimationLayerType.Base, out var baseLayerIndex))
             {
-                _locomotionLayer = new LocomotionLayer(animator, locomotionConfig, (clip, time, fade) =>
+                var baseMixer = _graph.Layers.GetLayerMixer(baseLayerIndex);
+                if (baseMixer.IsValid())
                 {
-                    PlayClipInternal(baseLayerIndex, clip, time, fade);
-                });
+                    _locomotionLayer = new LocomotionLayer(animator, locomotionConfig, _graph.Graph, baseMixer);
+                }
+                else
+                {
+                    Debug.LogWarning("[AnimFlux] Failed to bind LocomotionLayer: base layer mixer is invalid.");
+                }
             }
         }
 

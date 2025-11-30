@@ -73,6 +73,12 @@ namespace AnimFlux.Runtime
             ValidateLayer(layerIndex);
             _root.SetLayerMask(layerIndex, mask);
         }
+
+        public AnimationMixerPlayable GetLayerMixer(int layerIndex)
+        {
+            ValidateLayer(layerIndex);
+            return _layers[layerIndex].Mixer;
+        }
         
         private void ValidateLayer(int idx)
         {

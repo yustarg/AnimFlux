@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6aa2b1225e7de9c49b28f148aa7be2c3, type: 3}
+  m_Name: WalkTree
+  m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.LocomotionBlendTreeAsset
+  _children:
+  - name: 
+    threshold: 0
+    clip: {fileID: 0}
+    subTree: {fileID: 0}

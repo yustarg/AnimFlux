@@ -21,6 +21,8 @@ namespace AnimFlux.Runtime
         private ScriptPlayableOutput _fadeOutput;
         private FadeBehaviour _fadeBehaviour;
         
+        internal AnimationMixerPlayable Mixer => _mixer;
+        
         public AFLayer(string name, int index, AnimationMixerPlayable mixer, PlayableGraph graph)
         {
             Name = name;
