@@ -9,7 +9,7 @@ namespace AnimFlux.Runtime
     /// <summary>
     /// Runtime representation of a 2D directional blend tree that can be nested.
     /// </summary>
-    internal sealed class LocomotionBlendTreeInstance : IDisposable
+    internal sealed class LocomotionBlendTreeInstance : IDisposable, ILocomotionBlendRuntime
     {
         private readonly PlayableGraph _graph;
         private readonly AnimationMixerPlayable _mixer;
@@ -17,6 +17,7 @@ namespace AnimFlux.Runtime
         private readonly float[] _weights;
 
         public bool IsValid => _mixer.IsValid() && _children.Length > 0;
+        public Playable Playable => _mixer;
         public Playable Output => _mixer;
 
         public LocomotionBlendTreeInstance(PlayableGraph graph, LocomotionBlendTreeAsset asset)
@@ -138,7 +139,7 @@ namespace AnimFlux.Runtime
             }
         }
 
-        private static ChildSlot[] BuildChildren(PlayableGraph graph, LocomotionBlendTreeAsset asset)
+            private static ChildSlot[] BuildChildren(PlayableGraph graph, LocomotionBlendTreeAsset asset)
         {
             if (asset.Children == null || asset.Children.Count == 0)
             {
@@ -162,57 +163,39 @@ namespace AnimFlux.Runtime
         private sealed class ChildSlot : IDisposable
         {
             public readonly Vector2 Direction;
-            public readonly Playable Playable;
-            public readonly LocomotionBlendTreeInstance Nested;
-            public readonly AnimationClipPlayable ClipPlayable;
-            public bool HasPlayable => Playable.IsValid();
+            public Playable Playable => _runtime?.Playable ?? Playable.Null;
+            public bool HasPlayable => _runtime != null && _runtime.Playable.IsValid();
 
-            private ChildSlot(Vector2 direction, Playable playable, LocomotionBlendTreeInstance nested, AnimationClipPlayable clipPlayable)
+            private readonly ILocomotionBlendRuntime _runtime;
+
+            private ChildSlot(Vector2 direction, ILocomotionBlendRuntime runtime)
             {
                 Direction = direction;
-                Playable = playable;
-                Nested = nested;
-                ClipPlayable = clipPlayable;
+                _runtime = runtime;
             }
 
-            public static ChildSlot Create(PlayableGraph graph, LocomotionBlendChild data)
+            public static ChildSlot Create(PlayableGraph graph, LocomotionBlendNode data)
             {
                 if (!graph.IsValid() || data == null) return null;
 
                 var direction = data.direction.sqrMagnitude > 0.0001f ? data.direction.normalized : Vector2.zero;
-
-                if (data.motion.TryGetTree(out var subTree) && subTree != null)
+                if (!data.motion.TryCreateRuntime(graph, out var runtime) || runtime == null || !runtime.Playable.IsValid())
                 {
-                    var nested = new LocomotionBlendTreeInstance(graph, subTree);
-                    if (!nested.IsValid) return null;
-                    return new ChildSlot(direction, nested.Output, nested, default);
+                    runtime?.Dispose();
+                    return null;
                 }
 
-                if (data.motion.TryGetClip(out var clip) && clip != null)
-                {
-                    var clipPlayable = AnimationClipPlayable.Create(graph, clip);
-                    clipPlayable.SetApplyFootIK(true);
-                    clipPlayable.SetApplyPlayableIK(true);
-                    clipPlayable.SetDuration(clip.isLooping ? double.PositiveInfinity : clip.length);
-                    clipPlayable.SetSpeed(1f);
-                    return new ChildSlot(direction, clipPlayable, null, clipPlayable);
-                }
-
-                return null;
+                return new ChildSlot(direction, runtime);
             }
 
             public void Evaluate(Vector2 parameter)
             {
-                Nested?.Evaluate(parameter);
+                _runtime?.Evaluate(parameter);
             }
 
             public void Dispose()
             {
-                Nested?.Dispose();
-                if (ClipPlayable.IsValid())
-                {
-                    ClipPlayable.Destroy();
-                }
+                _runtime?.Dispose();
             }
         }
     }

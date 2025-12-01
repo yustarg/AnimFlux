@@ -16,13 +16,13 @@ namespace AnimFlux.Editor
             var reference = EditorGUI.ObjectField(position, label, assetProp.objectReferenceValue, typeof(Object), false);
             if (EditorGUI.EndChangeCheck())
             {
-                if (reference == null || reference is AnimationClip || reference is LocomotionBlendTreeAsset)
+                if (reference == null || reference is AnimationClip || reference is LocomotionBlendTreeAsset || reference is ILocomotionBlendSource)
                 {
                     assetProp.objectReferenceValue = reference;
                 }
                 else
                 {
-                    Debug.LogWarning("[AnimFlux] Locomotion blend motions only accept AnimationClip or LocomotionBlendTree assets.");
+                    Debug.LogWarning("[AnimFlux] Locomotion blend motions only accept AnimationClip or assets implementing ILocomotionBlendSource.");
                 }
             }
 
