@@ -173,6 +173,10 @@ namespace AnimFlux.Runtime
         public void SetMoveDirection(Vector3 direction) => _locomotionLayer?.SetMoveDirection(direction);
         public void SetIsGrounded(bool grounded) => _locomotionLayer?.SetIsGrounded(grounded);
         public void SetRootMotionEnabled(bool enabled) => _locomotionLayer?.SetRootMotionEnabled(enabled);
+        public void SetIsStrafing(bool isStrafing) => _locomotionLayer?.SetIsStrafing(isStrafing);
+        public void SetForwardStrafe(float value) => _locomotionLayer?.SetForwardStrafe(value);
+        public void SetStrafeDirection(float value) => _locomotionLayer?.SetStrafeDirection(value);
+        public void SetInclineAngle(float angle) => _locomotionLayer?.SetInclineAngle(angle);
 
         public void SetLookAtTarget(Transform target, float weight = 1f) => _ikController?.SetLookAtTarget(target, weight);
         public void ClearLookAtTarget() => _ikController?.ClearLookAt();

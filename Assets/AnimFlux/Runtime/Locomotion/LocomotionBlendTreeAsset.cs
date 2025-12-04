@@ -24,15 +24,6 @@ namespace AnimFlux.Runtime
         {
             if (_nodes == null || _nodes.Count == 0) return;
 
-            for (int i = 0; i < _nodes.Count; i++)
-            {
-                var c = _nodes[i];
-                if (c.direction.sqrMagnitude > 0.0001f)
-                {
-                    c.direction = c.direction.normalized;
-                }
-            }
-
             for (int i = _nodes.Count - 1; i >= 0; i--)
             {
                 if (_nodes[i].motion.HasValidReference) continue;
@@ -128,7 +119,7 @@ namespace AnimFlux.Runtime
 
             public Playable Playable => _playable;
 
-            public void Evaluate(Vector2 parameter)
+            public void Evaluate(in LocomotionBlendParameters parameters)
             {
                 // Clips don't need parameter evaluation.
             }

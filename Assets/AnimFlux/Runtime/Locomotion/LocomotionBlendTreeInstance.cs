@@ -34,7 +34,9 @@ namespace AnimFlux.Runtime
 
             _children = BuildChildren(graph, asset);
             _weights = _children.Length > 0 ? new float[_children.Length] : Array.Empty<float>();
-            _mixer = _children.Length > 0 ? AnimationMixerPlayable.Create(graph, _children.Length) : AnimationMixerPlayable.Create(graph, 1);
+            _mixer = _children.Length > 0
+                ? AnimationMixerPlayable.Create(graph, _children.Length)
+                : AnimationMixerPlayable.Create(graph, 1);
 
             for (int i = 0; i < _children.Length; i++)
             {
@@ -45,16 +47,17 @@ namespace AnimFlux.Runtime
             }
         }
 
-        public void Evaluate(Vector2 parameter)
+        public void Evaluate(in LocomotionBlendParameters parameters)
         {
             if (!IsValid) return;
 
             for (int i = 0; i < _children.Length; i++)
             {
-                _children[i].Evaluate(parameter);
+                _children[i].Evaluate(parameters);
             }
 
-            ComputeWeights(parameter);
+            var blendVector = parameters.ToBlendVector();
+            ComputeWeights(blendVector);
 
             for (int i = 0; i < _weights.Length; i++)
             {
@@ -119,6 +122,7 @@ namespace AnimFlux.Runtime
                 {
                     _weights[0] = 1f;
                 }
+
                 return;
             }
 
@@ -135,11 +139,12 @@ namespace AnimFlux.Runtime
                     if (i == centerIndex) continue;
                     occupied += _weights[i];
                 }
+
                 _weights[centerIndex] = Mathf.Clamp01(1f - occupied);
             }
         }
 
-            private static ChildSlot[] BuildChildren(PlayableGraph graph, LocomotionBlendTreeAsset asset)
+        private static ChildSlot[] BuildChildren(PlayableGraph graph, LocomotionBlendTreeAsset asset)
         {
             if (asset.Children == null || asset.Children.Count == 0)
             {
@@ -179,7 +184,8 @@ namespace AnimFlux.Runtime
                 if (!graph.IsValid() || data == null) return null;
 
                 var direction = data.direction.sqrMagnitude > 0.0001f ? data.direction.normalized : Vector2.zero;
-                if (!data.motion.TryCreateRuntime(graph, out var runtime) || runtime == null || !runtime.Playable.IsValid())
+                if (!data.motion.TryCreateRuntime(graph, out var runtime) || runtime == null ||
+                    !runtime.Playable.IsValid())
                 {
                     runtime?.Dispose();
                     return null;
@@ -188,9 +194,9 @@ namespace AnimFlux.Runtime
                 return new ChildSlot(direction, runtime);
             }
 
-            public void Evaluate(Vector2 parameter)
+            public void Evaluate(in LocomotionBlendParameters parameters)
             {
-                _runtime?.Evaluate(parameter);
+                _runtime?.Evaluate(parameters);
             }
 
             public void Dispose()
@@ -200,4 +206,3 @@ namespace AnimFlux.Runtime
         }
     }
 }
-

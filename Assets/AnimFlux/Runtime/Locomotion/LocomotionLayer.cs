@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
@@ -7,36 +6,40 @@ using UnityEngine.Playables;
 namespace AnimFlux.Runtime
 {
     /// <summary>
-    /// Base locomotion layer that drives AnimationLayerType.Base through Playables.
+    /// Drives the base locomotion playable graph using a single root blend tree.
     /// </summary>
     public sealed class LocomotionLayer : IDisposable
     {
-        private enum SourceType { Idle, Walk, Sprint, Fall }
-
         private readonly Animator _animator;
         private readonly LocomotionConfig _config;
         private readonly PlayableGraph _graph;
         private readonly AnimationMixerPlayable _baseLayerMixer;
-        private readonly List<SourceSlot> _orderedSlots = new(4);
-        private readonly Dictionary<SourceType, SourceSlot> _slotLookup = new();
 
-        private AnimationMixerPlayable _stateMixer;
+        private LocomotionBlendTreeInstance _rootTreeInstance;
+        private AnimationClipPlayable _fallbackClipPlayable;
+        private Playable _boundPlayable;
+        private bool _isBoundToBase;
+
+        private bool _rootMotionEnabled = true;
+        private bool _isGrounded = true;
+
         private float _desiredSpeed;
         private float _currentSpeed;
         private float _speedVelocity;
-        private Vector3 _moveDirection;
-        private bool _isGrounded = true;
-        private bool _rootMotionEnabled = true;
-        private bool _isBoundToBase;
 
-        private float _idleWeight;
-        private float _walkWeight;
-        private float _sprintWeight;
-        private float _fallWeight;
-        private float _idleVelocity;
-        private float _walkVelocity;
-        private float _sprintVelocity;
-        private float _fallVelocity;
+        private bool _isStrafing;
+        private float _forwardStrafeInput;
+        private float _strafeDirectionInput;
+        private float _inclineInput;
+
+        private float _currentForwardStrafe;
+        private float _currentStrafeDirection;
+        private float _currentIncline;
+        private float _forwardStrafeVelocity;
+        private float _strafeDirVelocity;
+        private float _inclineVelocity;
+
+        private LocomotionBlendParameters _parameters;
 
         public LocomotionLayer(Animator animator, LocomotionConfig config, PlayableGraph graph, AnimationMixerPlayable baseLayerMixer)
         {
@@ -51,7 +54,7 @@ namespace AnimFlux.Runtime
             }
 
             _rootMotionEnabled = config.enableRootMotion;
-            BuildMixerGraph();
+            BuildRootPlayable();
             ApplyRootMotion();
         }
 
@@ -62,8 +65,15 @@ namespace AnimFlux.Runtime
 
         public void SetMoveDirection(Vector3 direction)
         {
-            _moveDirection = direction;
+            var planar = new Vector2(direction.x, direction.z);
+            _forwardStrafeInput = planar.y;
+            _strafeDirectionInput = planar.x;
         }
+
+        public void SetIsStrafing(bool isStrafing) => _isStrafing = isStrafing;
+        public void SetForwardStrafe(float value) => _forwardStrafeInput = value;
+        public void SetStrafeDirection(float value) => _strafeDirectionInput = value;
+        public void SetInclineAngle(float value) => _inclineInput = value;
 
         public void SetIsGrounded(bool grounded)
         {
@@ -78,10 +88,15 @@ namespace AnimFlux.Runtime
 
         public void Update(float deltaTime)
         {
-            if (!_stateMixer.IsValid()) return;
+            if (!_boundPlayable.IsValid()) return;
+
             UpdateSpeed(deltaTime);
-            EvaluateBlendTrees();
-            UpdateMixerWeights(deltaTime);
+            UpdateParameters(deltaTime);
+
+            if (_rootTreeInstance != null)
+            {
+                _rootTreeInstance.Evaluate(in _parameters);
+            }
         }
 
         public void Dispose()
@@ -89,65 +104,63 @@ namespace AnimFlux.Runtime
             if (_isBoundToBase && _graph.IsValid() && _baseLayerMixer.IsValid())
             {
                 var currentInput = _baseLayerMixer.GetInput(0);
-                if (currentInput.IsValid() && currentInput.Equals((Playable)_stateMixer))
+                if (currentInput.IsValid() && currentInput.Equals(_boundPlayable))
                 {
                     _graph.Disconnect(_baseLayerMixer, 0);
                 }
             }
 
-            if (_stateMixer.IsValid())
+            _isBoundToBase = false;
+
+            _rootTreeInstance?.Dispose();
+            _rootTreeInstance = null;
+
+            if (_fallbackClipPlayable.IsValid())
             {
-                _stateMixer.Destroy();
+                _fallbackClipPlayable.Destroy();
             }
 
-            for (int i = 0; i < _orderedSlots.Count; i++)
-            {
-                _orderedSlots[i].Dispose();
-            }
-
-            _orderedSlots.Clear();
-            _slotLookup.Clear();
+            _boundPlayable = default;
         }
 
-        private void BuildMixerGraph()
+        private void BuildRootPlayable()
         {
-            var slots = new List<SourceSlot>(4);
-
-            var idleSlot = CreateClipSlot(SourceType.Idle, _config.idleClip);
-            if (idleSlot != null) slots.Add(idleSlot);
-
-            var walkSlot = CreateTreeSlot(SourceType.Walk, _config.walkTree, _config.walkClip);
-            if (walkSlot != null) slots.Add(walkSlot);
-
-            var sprintSlot = CreateTreeSlot(SourceType.Sprint, _config.sprintTree, _config.sprintClip);
-            if (sprintSlot != null) slots.Add(sprintSlot);
-
-            var fallSlot = CreateClipSlot(SourceType.Fall, _config.fallClip);
-            if (fallSlot != null) slots.Add(fallSlot);
-
-            if (slots.Count == 0)
+            if (_config.rootTree)
             {
-                Debug.LogWarning("[AnimFlux] LocomotionLayer has no valid clips or blend trees assigned.");
+                _rootTreeInstance = new LocomotionBlendTreeInstance(_graph, _config.rootTree);
+                if (_rootTreeInstance.IsValid)
+                {
+                    _boundPlayable = _rootTreeInstance.Playable;
+                }
+                else
+                {
+                    _rootTreeInstance.Dispose();
+                    _rootTreeInstance = null;
+                }
+            }
+
+            if (!_boundPlayable.IsValid() && _config.fallbackClip)
+            {
+                _fallbackClipPlayable = AnimationClipPlayable.Create(_graph, _config.fallbackClip);
+                _fallbackClipPlayable.SetApplyFootIK(true);
+                _fallbackClipPlayable.SetApplyPlayableIK(true);
+                _fallbackClipPlayable.SetDuration(_config.fallbackClip.isLooping ? double.PositiveInfinity : _config.fallbackClip.length);
+                _fallbackClipPlayable.SetSpeed(1f);
+                _boundPlayable = _fallbackClipPlayable;
+            }
+
+            if (!_boundPlayable.IsValid())
+            {
+                Debug.LogWarning("[AnimFlux] LocomotionLayer requires a root blend tree or fallback clip.");
                 return;
             }
 
-            _stateMixer = AnimationMixerPlayable.Create(_graph, slots.Count);
-            for (int i = 0; i < slots.Count; i++)
-            {
-                var slot = slots[i];
-                slot.Index = i;
-                _orderedSlots.Add(slot);
-                _slotLookup[slot.Type] = slot;
-                _graph.Connect(slot.Playable, 0, _stateMixer, i);
-                _stateMixer.SetInputWeight(i, i == 0 ? 1f : 0f);
-            }
-
-            BindToBaseLayer();
+            BindToBaseLayer(_boundPlayable);
         }
 
-        private void BindToBaseLayer()
+        private void BindToBaseLayer(Playable source)
         {
-            if (!_stateMixer.IsValid()) return;
+            if (!source.IsValid() || !_baseLayerMixer.IsValid()) return;
 
             var inputCount = Mathf.Max(_baseLayerMixer.GetInputCount(), 1);
             _baseLayerMixer.SetInputCount(inputCount);
@@ -158,36 +171,9 @@ namespace AnimFlux.Runtime
                 _graph.Disconnect(_baseLayerMixer, 0);
             }
 
-            _graph.Connect(_stateMixer, 0, _baseLayerMixer, 0);
+            _graph.Connect(source, 0, _baseLayerMixer, 0);
             _baseLayerMixer.SetInputWeight(0, 1f);
             _isBoundToBase = true;
-        }
-
-        private SourceSlot CreateClipSlot(SourceType type, AnimationClip clip)
-        {
-            if (!clip) return null;
-            var playable = AnimationClipPlayable.Create(_graph, clip);
-            playable.SetApplyFootIK(true);
-            playable.SetApplyPlayableIK(true);
-            playable.SetDuration(clip.isLooping ? double.PositiveInfinity : clip.length);
-            playable.SetSpeed(1f);
-
-            return new SourceSlot(type, playable, default, playable);
-        }
-
-        private SourceSlot CreateTreeSlot(SourceType type, LocomotionBlendTreeAsset tree, AnimationClip fallbackClip)
-        {
-            if (tree)
-            {
-                var instance = new LocomotionBlendTreeInstance(_graph, tree);
-                if (instance.IsValid)
-                {
-                    return new SourceSlot(type, instance.Output, instance, default);
-                }
-                instance.Dispose();
-            }
-
-            return CreateClipSlot(type, fallbackClip);
         }
 
         private void UpdateSpeed(float deltaTime)
@@ -196,130 +182,30 @@ namespace AnimFlux.Runtime
             _currentSpeed = Mathf.SmoothDamp(_currentSpeed, _desiredSpeed, ref _speedVelocity, damp, Mathf.Infinity, deltaTime);
         }
 
-        private void EvaluateBlendTrees()
+        private void UpdateParameters(float deltaTime)
         {
-            var planarDir = new Vector2(_moveDirection.x, _moveDirection.z);
-            if (planarDir.sqrMagnitude > 0.0001f)
-            {
-                planarDir = planarDir.normalized * _currentSpeed;
-            }
-            else
-            {
-                planarDir = new Vector2(0f, _currentSpeed);
-            }
+            var paramDamp = Mathf.Max(0.0001f, _config.parameterDampTime);
+            _currentForwardStrafe = Mathf.SmoothDamp(_currentForwardStrafe, _forwardStrafeInput, ref _forwardStrafeVelocity, paramDamp, Mathf.Infinity, deltaTime);
+            _currentStrafeDirection = Mathf.SmoothDamp(_currentStrafeDirection, _strafeDirectionInput, ref _strafeDirVelocity, paramDamp, Mathf.Infinity, deltaTime);
+            _currentIncline = Mathf.SmoothDamp(_currentIncline, _inclineInput, ref _inclineVelocity, paramDamp, Mathf.Infinity, deltaTime);
 
-            for (int i = 0; i < _orderedSlots.Count; i++)
-            {
-                _orderedSlots[i].Evaluate(planarDir);
-            }
+            _parameters.MoveSpeed = NormalizeParameter(_isGrounded ? _currentSpeed : 0f, _config.maxMoveSpeed);
+            _parameters.IsStrafing = _isStrafing;
+            _parameters.ForwardStrafe = NormalizeParameter(_currentForwardStrafe, _config.maxForwardStrafe);
+            _parameters.StrafeDirection = NormalizeParameter(_currentStrafeDirection, _config.maxStrafeDirection);
+            _parameters.InclineAngle = NormalizeParameter(_currentIncline, _config.maxInclineAngle);
         }
 
-        private void UpdateMixerWeights(float deltaTime)
+        private static float NormalizeParameter(float value, float max)
         {
-            float idleTarget;
-            float walkTarget;
-            float sprintTarget;
-            float fallTarget;
-
-            if (!_isGrounded && _slotLookup.ContainsKey(SourceType.Fall))
-            {
-                idleTarget = 0f;
-                walkTarget = 0f;
-                sprintTarget = 0f;
-                fallTarget = 1f;
-            }
-            else
-            {
-                fallTarget = 0f;
-
-                var walkSpeed = Mathf.Max(0.0001f, _config.walkSpeed);
-                var sprintSpeed = Mathf.Max(_config.sprintSpeed, walkSpeed + 0.0001f);
-                var sprintRange = Mathf.Max(0.0001f, _config.sprintBlendRange);
-
-                var walkBlend = Mathf.Clamp01(_currentSpeed / walkSpeed);
-                var sprintBlend = Mathf.Clamp01((_currentSpeed - sprintSpeed) / sprintRange);
-                walkBlend = Mathf.Clamp01(walkBlend - sprintBlend);
-
-                walkTarget = walkBlend;
-                sprintTarget = sprintBlend;
-                idleTarget = 1f - Mathf.Clamp01(walkTarget + sprintTarget);
-            }
-
-            if (!_slotLookup.ContainsKey(SourceType.Sprint))
-            {
-                walkTarget += sprintTarget;
-                sprintTarget = 0f;
-            }
-
-            if (!_slotLookup.ContainsKey(SourceType.Walk))
-            {
-                idleTarget += walkTarget;
-                walkTarget = 0f;
-            }
-
-            if (!_slotLookup.ContainsKey(SourceType.Idle))
-            {
-                walkTarget += idleTarget;
-                idleTarget = 0f;
-            }
-
-            if (!_slotLookup.ContainsKey(SourceType.Fall))
-            {
-                idleTarget += fallTarget;
-                fallTarget = 0f;
-            }
-
-            var blendDamp = Mathf.Max(0.0001f, _config.stateBlendDampTime);
-            _idleWeight = Mathf.SmoothDamp(_idleWeight, idleTarget, ref _idleVelocity, blendDamp, Mathf.Infinity, deltaTime);
-            _walkWeight = Mathf.SmoothDamp(_walkWeight, walkTarget, ref _walkVelocity, blendDamp, Mathf.Infinity, deltaTime);
-            _sprintWeight = Mathf.SmoothDamp(_sprintWeight, sprintTarget, ref _sprintVelocity, blendDamp, Mathf.Infinity, deltaTime);
-            _fallWeight = Mathf.SmoothDamp(_fallWeight, fallTarget, ref _fallVelocity, blendDamp, Mathf.Infinity, deltaTime);
-
-            SetSlotWeight(SourceType.Idle, _idleWeight);
-            SetSlotWeight(SourceType.Walk, _walkWeight);
-            SetSlotWeight(SourceType.Sprint, _sprintWeight);
-            SetSlotWeight(SourceType.Fall, _fallWeight);
-        }
-
-        private void SetSlotWeight(SourceType type, float weight)
-        {
-            if (!_slotLookup.TryGetValue(type, out var slot)) return;
-            if (!_stateMixer.IsValid()) return;
-            _stateMixer.SetInputWeight(slot.Index, Mathf.Clamp01(weight));
+            var denom = Mathf.Max(0.0001f, Mathf.Abs(max));
+            return Mathf.Clamp(value / denom, -1f, 1f);
         }
 
         private void ApplyRootMotion()
         {
             if (!_animator) return;
             _animator.applyRootMotion = _config.enableRootMotion && _rootMotionEnabled;
-        }
-
-        private sealed class SourceSlot : IDisposable
-        {
-            public SourceType Type { get; }
-            public Playable Playable { get; }
-            public int Index { get; set; }
-            public LocomotionBlendTreeInstance TreeInstance { get; }
-            public AnimationClipPlayable ClipPlayable { get; }
-
-            public SourceSlot(SourceType type, Playable playable, LocomotionBlendTreeInstance treeInstance, AnimationClipPlayable clipPlayable)
-            {
-                Type = type;
-                Playable = playable;
-                TreeInstance = treeInstance;
-                ClipPlayable = clipPlayable;
-            }
-
-            public void Evaluate(Vector2 parameter) => TreeInstance?.Evaluate(parameter);
-
-            public void Dispose()
-            {
-                TreeInstance?.Dispose();
-                if (ClipPlayable.IsValid())
-                {
-                    ClipPlayable.Destroy();
-                }
-            }
         }
     }
 }

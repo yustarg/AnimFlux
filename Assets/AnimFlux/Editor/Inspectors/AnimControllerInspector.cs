@@ -60,42 +60,34 @@ namespace AnimFlux.Editor
 
             _locomotionObject.Update();
 
-            _showLocomotion = EditorGUILayout.BeginFoldoutHeaderGroup(_showLocomotion, "Locomotion Trees");
+            _showLocomotion = EditorGUILayout.BeginFoldoutHeaderGroup(_showLocomotion, "Locomotion Settings");
             if (_showLocomotion)
             {
                 using (new EditorGUI.IndentLevelScope())
                 {
-                    DrawBlendTreeField("walkTree", "Walk Blend Tree");
-                    DrawClipFallbackField("walkClip", "Walk Fallback Clip");
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("rootTree"), new GUIContent("Root Blend Tree"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("fallbackClip"), new GUIContent("Fallback Clip"));
+
                     EditorGUILayout.Space();
-                    DrawBlendTreeField("sprintTree", "Sprint Blend Tree");
-                    DrawClipFallbackField("sprintClip", "Sprint Fallback Clip");
+                    EditorGUILayout.LabelField("Parameter Normalization", EditorStyles.boldLabel);
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("maxMoveSpeed"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("maxForwardStrafe"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("maxStrafeDirection"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("maxInclineAngle"));
+
                     EditorGUILayout.Space();
-                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("walkSpeed"));
-                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("sprintSpeed"));
-                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("sprintBlendRange"));
+                    EditorGUILayout.LabelField("Smoothing", EditorStyles.boldLabel);
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("speedDampTime"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("parameterDampTime"));
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("crossFadeDuration"));
+
+                    EditorGUILayout.Space();
+                    EditorGUILayout.PropertyField(_locomotionObject.FindProperty("enableRootMotion"));
                 }
             }
             EditorGUILayout.EndFoldoutHeaderGroup();
 
             _locomotionObject.ApplyModifiedProperties();
-        }
-
-        private void DrawBlendTreeField(string propertyName, string label)
-        {
-            var property = _locomotionObject.FindProperty(propertyName);
-            if (property == null) return;
-            EditorGUILayout.PropertyField(property, new GUIContent(label));
-        }
-
-        private void DrawClipFallbackField(string propertyName, string label)
-        {
-            var property = _locomotionObject.FindProperty(propertyName);
-            if (property == null) return;
-            using (new EditorGUI.IndentLevelScope())
-            {
-                EditorGUILayout.PropertyField(property, new GUIContent(label));
-            }
         }
     }
 }

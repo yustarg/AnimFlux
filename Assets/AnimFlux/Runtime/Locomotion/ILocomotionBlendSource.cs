@@ -21,7 +21,7 @@ namespace AnimFlux.Runtime
     public interface ILocomotionBlendRuntime : IDisposable
     {
         Playable Playable { get; }
-        void Evaluate(Vector2 parameter);
+        void Evaluate(in LocomotionBlendParameters parameters);
     }
 }
 
