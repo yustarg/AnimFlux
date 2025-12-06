@@ -7,7 +7,7 @@ namespace AnimFlux.Runtime
     public sealed class LocomotionConfig : ScriptableObject
     {
         [Header("Root Blend Tree")]
-        [FormerlySerializedAs("walkTree")] public LocomotionBlendTreeAsset rootTree;
+        [FormerlySerializedAs("walkTree")] public AnimationBlendTreeAsset rootTree;
         public AnimationClip fallbackClip;
 
         [Header("Parameter Normalization")]

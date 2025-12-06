@@ -15,7 +15,7 @@ namespace AnimFlux.Runtime
         private readonly PlayableGraph _graph;
         private readonly AnimationMixerPlayable _baseLayerMixer;
 
-        private LocomotionBlendTreeInstance _rootTreeInstance;
+        private AnimationBlendTreeInstance _rootTreeInstance;
         private AnimationClipPlayable _fallbackClipPlayable;
         private Playable _boundPlayable;
         private bool _isBoundToBase;
@@ -38,8 +38,7 @@ namespace AnimFlux.Runtime
         private float _forwardStrafeVelocity;
         private float _strafeDirVelocity;
         private float _inclineVelocity;
-
-        private LocomotionBlendParameters _parameters;
+        private LocomotionContext _blendContext;
 
         public LocomotionLayer(Animator animator, LocomotionConfig config, PlayableGraph graph, AnimationMixerPlayable baseLayerMixer)
         {
@@ -93,10 +92,7 @@ namespace AnimFlux.Runtime
             UpdateSpeed(deltaTime);
             UpdateParameters(deltaTime);
 
-            if (_rootTreeInstance != null)
-            {
-                _rootTreeInstance.Evaluate(in _parameters);
-            }
+            _rootTreeInstance?.Evaluate(_blendContext);
         }
 
         public void Dispose()
@@ -127,7 +123,7 @@ namespace AnimFlux.Runtime
         {
             if (_config.rootTree)
             {
-                _rootTreeInstance = new LocomotionBlendTreeInstance(_graph, _config.rootTree);
+                _rootTreeInstance = new AnimationBlendTreeInstance(_graph, _config.rootTree);
                 if (_rootTreeInstance.IsValid)
                 {
                     _boundPlayable = _rootTreeInstance.Playable;
@@ -189,11 +185,26 @@ namespace AnimFlux.Runtime
             _currentStrafeDirection = Mathf.SmoothDamp(_currentStrafeDirection, _strafeDirectionInput, ref _strafeDirVelocity, paramDamp, Mathf.Infinity, deltaTime);
             _currentIncline = Mathf.SmoothDamp(_currentIncline, _inclineInput, ref _inclineVelocity, paramDamp, Mathf.Infinity, deltaTime);
 
-            _parameters.MoveSpeed = NormalizeParameter(_isGrounded ? _currentSpeed : 0f, _config.maxMoveSpeed);
-            _parameters.IsStrafing = _isStrafing;
-            _parameters.ForwardStrafe = NormalizeParameter(_currentForwardStrafe, _config.maxForwardStrafe);
-            _parameters.StrafeDirection = NormalizeParameter(_currentStrafeDirection, _config.maxStrafeDirection);
-            _parameters.InclineAngle = NormalizeParameter(_currentIncline, _config.maxInclineAngle);
+            var normalizedSpeed = NormalizeParameter(_isGrounded ? _currentSpeed : 0f, _config.maxMoveSpeed);
+            var normalizedForwardStrafe = NormalizeParameter(_currentForwardStrafe, _config.maxForwardStrafe);
+            var normalizedStrafeDirection = NormalizeParameter(_currentStrafeDirection, _config.maxStrafeDirection);
+            var normalizedIncline = NormalizeParameter(_currentIncline, _config.maxInclineAngle);
+
+            var directional = _isStrafing
+                ? new Vector2(normalizedStrafeDirection, normalizedForwardStrafe)
+                : new Vector2(0f, normalizedSpeed);
+
+            directional.y += normalizedIncline;
+
+            _blendContext = new LocomotionContext
+            {
+                DirectionalBlend = directional,
+                SpeedNormalized = normalizedSpeed,
+                ForwardStrafeNormalized = normalizedForwardStrafe,
+                StrafeDirectionNormalized = normalizedStrafeDirection,
+                InclineNormalized = normalizedIncline,
+                IsStrafing = _isStrafing
+            };
         }
 
         private static float NormalizeParameter(float value, float max)

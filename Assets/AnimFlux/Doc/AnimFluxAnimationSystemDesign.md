@@ -30,7 +30,7 @@
   - ScriptPlayable 模板（`AnimationEventBehaviour`、`IKBehaviour` 等）。
 - `AnimFlux.Runtime.Locomotion`
   - `LocomotionLayer`：封装 BaseLayer Mixer、参数平滑、Blend 数据。
-  - `LocomotionConfig`（ScriptableObject）：存储 Root Blend Tree、参数归一化与 Root Motion 策略。
+  - `LocomotionConfig`（ScriptableObject）：存储 Root `AnimationBlendTreeAsset`、参数归一化与 Root Motion 策略。
 - `AnimFlux.Runtime.IK`
   - `CharacterIKController`：统一 SetLookAtTarget / SetHandIKTarget / SetFootIKTarget。
   - `IKPlayableBehaviour`：在 Graph 中执行 IK 时读取控制器数据并输出姿势修正。
@@ -52,7 +52,7 @@
 - `AnimController` 内部维护 `Dictionary<AnimationLayerType, int>`，提供高层语义接口（`PlayUpperBodyClip`、`SetAdditivePose`、`SetIKWeight`）。
 
 #### 4.4 Locomotion 模块
-- `LocomotionLayer` 绑定 BaseLayer 索引，仅维护一个 Root Blend Tree（`LocomotionBlendTreeAsset`）。Idle/Walk/Sprint/Fall 皆由该树的子节点与嵌套子树定义。
+- `LocomotionLayer` 绑定 BaseLayer 索引，仅维护一个 Root Blend Tree（`AnimationBlendTreeAsset`）。Idle/Walk/Sprint/Fall 皆由该树的子节点与嵌套子树定义。
 - 参数输入：`MoveSpeed`、`IsStrafing`、`ForwardStrafe`、`StrafeDir`、`InclineAngle`、`IsGrounded`、`RootMotionMode`。
 - `LocomotionConfig` 负责提供 Root Tree、Fallback Clip 及各参数的归一化上限，`LocomotionLayer` 使用 `Mathf.SmoothDamp` 将输入平滑后转为归一化向量驱动 Blend Tree。
 - Root Motion：通过 `Animator.applyRootMotion` 配合 `AnimController` 控制；如禁用则输出位移供角色控制器使用。
