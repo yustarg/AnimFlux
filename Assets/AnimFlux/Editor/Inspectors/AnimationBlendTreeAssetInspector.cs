@@ -32,6 +32,13 @@ namespace AnimFlux.Editor
                     var element = list.serializedProperty.GetArrayElementAtIndex(list.serializedProperty.arraySize - 1);
                     element.FindPropertyRelative("name").stringValue = $"Node {list.serializedProperty.arraySize}";
                     element.FindPropertyRelative("motion").FindPropertyRelative("_asset").objectReferenceValue = null;
+                    var asset = target as AnimationBlendTreeAsset;
+                    var blendSpace = asset != null ? asset.BlendSpace : null;
+                    var metaProp = element.FindPropertyRelative("_metadata");
+                    if (blendSpace != null && metaProp != null)
+                    {
+                        metaProp.managedReferenceValue = blendSpace.CreateDefaultMetadata();
+                    }
                 }
             };
         }

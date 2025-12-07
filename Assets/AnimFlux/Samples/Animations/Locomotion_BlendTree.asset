@@ -12,8 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
   m_Name: Locomotion_BlendTree
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
-  _blendSpace: {fileID: 0}
-  _nodes: []
+  _blendSpace: {fileID: 11400000, guid: 76927586d9da77d4197ce0ddf6443610, type: 2}
+  _nodes:
+  - name: Idle
+    _metadata:
+      rid: 3529686465337884734
+    motion:
+      _asset: {fileID: 1827226128182048838, guid: a4b8f2deec6a99945987cfc59b1b4e54, type: 3}
+  - name: Node 2
+    _metadata:
+      rid: 3529686465337884735
+    motion:
+      _asset: {fileID: 2571081563578608591, guid: eead3eb07cb89cb4eb25b3550df5e84b, type: 3}
+  - name: Node 3
+    _metadata:
+      rid: 3529686465337884733
+    motion:
+      _asset: {fileID: 1827226128182048838, guid: b87784217dc9c8c4fa00d2e1a45cb404, type: 3}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 3529686465337884733
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        position: {x: 1, y: 1}
+    - rid: 3529686465337884734
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        position: {x: 0, y: 0}
+    - rid: 3529686465337884735
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        position: {x: 0, y: 1}

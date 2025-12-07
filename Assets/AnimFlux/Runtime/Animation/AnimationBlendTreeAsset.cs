@@ -48,6 +48,7 @@ namespace AnimFlux.Runtime
             var blendSpace = ResolveBlendSpace();
             if (blendSpace == null) return;
 
+            var seen = new HashSet<BlendNodeMetadata>();
             for (int i = _nodes.Count - 1; i >= 0; i--)
             {
                 var node = _nodes[i];
@@ -57,12 +58,32 @@ namespace AnimFlux.Runtime
                     continue;
                 }
 
-                blendSpace.EnsureNodeMetadata(node);
+                // Ensure metadata exists and is not a shared reference
+                if (node.Metadata == null || seen.Contains(node.Metadata))
+                {
+                    var fresh = CloneMetadata(blendSpace.CreateDefaultMetadata());
+                    node.SetMetadata(fresh);
+                }
+                seen.Add(node.Metadata);
 
                 if (!node.motion.HasValidReference)
                 {
                     Debug.LogWarning($"[AnimFlux] BlendTree child '{node.name}' is missing a Motion reference.", this);
                 }
+            }
+        }
+
+        private static BlendNodeMetadata CloneMetadata(BlendNodeMetadata source)
+        {
+            if (source == null) return null;
+            try
+            {
+                var json = JsonUtility.ToJson(source);
+                return (BlendNodeMetadata)JsonUtility.FromJson(json, source.GetType());
+            }
+            catch
+            {
+                return null;
             }
         }
 
