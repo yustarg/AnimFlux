@@ -21,4 +21,4 @@ MonoBehaviour:
   speedDampTime: 0.2
   parameterDampTime: 0.1
   crossFadeDuration: 0.2
-  enableRootMotion: 1
+  enableRootMotion: 0
