@@ -65,6 +65,11 @@ namespace AnimFlux.Runtime
             {
                 _mixer.SetInputWeight(i, _weights[i]);
             }
+
+            if (AnimFluxDebug.Enabled)
+            {
+                Debug.Log($"[AnimFlux][BlendTreeInstance] children={_children.Length}, weights=[{string.Join(", ", _weights)}]");
+            }
         }
 
         public void Dispose()

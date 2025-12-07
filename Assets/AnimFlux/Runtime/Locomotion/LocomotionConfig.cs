@@ -16,6 +16,18 @@ namespace AnimFlux.Runtime
         [Min(0.01f)] public float maxStrafeDirection = 1f;
         [Min(0.01f)] public float maxInclineAngle = 30f;
 
+        public enum FloatBlendSource
+        {
+            SpeedNormalized,
+            ForwardStrafe,
+            StrafeDirection,
+            Incline,
+            RawSpeed
+        }
+
+        [Header("Blend Sources")]
+        public FloatBlendSource floatBlendSource = FloatBlendSource.SpeedNormalized;
+
         [Header("Smoothing")]
         public float speedDampTime = 0.2f;
         public float parameterDampTime = 0.1f;
@@ -23,5 +35,9 @@ namespace AnimFlux.Runtime
 
         [Header("Root Motion")]
         public bool enableRootMotion = true;
+
+        [Header("Debug")]
+        public bool debugLog;
+        [Min(0.05f)] public float debugLogInterval = 0.5f;
     }
 }

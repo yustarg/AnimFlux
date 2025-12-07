@@ -16,7 +16,7 @@ MonoBehaviour:
   - LayerType: 0
     Name: Locomotion
     Mask: {fileID: 0}
-    DefaultWeight: 0
+    DefaultWeight: 1
     BlendMode: 0
   _locomotionConfig: {fileID: 11400000, guid: e453b9529a5dd1b45b4b9286a41c304a, type: 2}
   _eventStream: {fileID: 0}

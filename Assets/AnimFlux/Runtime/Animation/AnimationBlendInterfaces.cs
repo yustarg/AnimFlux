@@ -20,5 +20,10 @@ namespace AnimFlux.Runtime
     {
         Vector2 DirectionalBlend { get; }
     }
+
+    public interface IFloatBlendProvider
+    {
+        float FloatBlend { get; }
+    }
 }
 

@@ -25,6 +25,8 @@ namespace AnimFlux.Samples
         [SerializeField] private LayerMask groundMask = ~0;
         [SerializeField] private bool autoGrounded = true;
         [SerializeField] private KeyCode toggleGroundedKey = KeyCode.Space;
+        [SerializeField] private float gravity = 9.81f;
+        [SerializeField] private bool useCharacterControllerMove = true;
 
         [Header("Strafe & Incline")]
         [SerializeField] private bool alwaysStrafe = true;
@@ -50,6 +52,7 @@ namespace AnimFlux.Samples
         private float _currentForwardStrafe;
         private float _currentStrafeDirection;
         private float _currentIncline;
+        private float _verticalVelocity;
 
         private void Awake()
         {
@@ -82,6 +85,7 @@ namespace AnimFlux.Samples
             UpdateStrafeParameters(planarDir, isStrafing, Time.deltaTime);
             _controller.SetInclineAngle(ComputeInclineAngle(Time.deltaTime));
 
+            ApplyMovement(planarDir);
             UpdateFacing(planarDir);
         }
 
@@ -166,6 +170,31 @@ namespace AnimFlux.Samples
             if (!facingRoot || planarDir.sqrMagnitude < 0.0001f) return;
             var targetRotation = Quaternion.LookRotation(planarDir, Vector3.up);
             facingRoot.rotation = Quaternion.RotateTowards(facingRoot.rotation, targetRotation, turnSpeed * Time.deltaTime);
+        }
+
+        private void ApplyMovement(Vector3 planarDir)
+        {
+            var dt = Time.deltaTime;
+            if (characterController && useCharacterControllerMove)
+            {
+                if (characterController.isGrounded)
+                {
+                    // keep a small downward force to stay grounded
+                    if (_verticalVelocity < 0f) _verticalVelocity = -2f;
+                }
+                else
+                {
+                    _verticalVelocity -= gravity * dt;
+                }
+
+                var move = new Vector3(_currentVelocity.x, _verticalVelocity, _currentVelocity.z);
+                characterController.Move(move * dt);
+            }
+            else
+            {
+                // fall back to direct transform move (no collision)
+                transform.position += _currentVelocity * dt;
+            }
         }
 
         private bool ShouldStrafe() => alwaysStrafe || _inputAimActive || _inputLockOnActive;

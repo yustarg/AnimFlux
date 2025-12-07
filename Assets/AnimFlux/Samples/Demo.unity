@@ -538,7 +538,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: 1.1, z: 0}
 --- !u!114 &1494479561
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -551,21 +551,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5e499374f253bf4cb2e368bcd905ef6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimFlux.Samples.LocomotionSampleDriver
-  maxWalkSpeed: 2
+  maxWalkSpeed: 10
   sprintMultiplier: 1.6
   acceleration: 8
   deceleration: 10
   turnSpeed: 540
   facingRoot: {fileID: 0}
-  cameraTransform: {fileID: 0}
+  cameraTransform: {fileID: 961739753}
   characterController: {fileID: 1494479560}
   rearGroundProbe: {fileID: 0}
   frontGroundProbe: {fileID: 0}
   groundMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  autoGrounded: 0
+  autoGrounded: 1
   toggleGroundedKey: 32
+  gravity: 9.81
+  useCharacterControllerMove: 1
   alwaysStrafe: 1
   forwardStrafeMinAngle: -55
   forwardStrafeMaxAngle: 125

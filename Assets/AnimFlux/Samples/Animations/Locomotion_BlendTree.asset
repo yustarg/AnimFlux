@@ -16,31 +16,31 @@ MonoBehaviour:
   _nodes:
   - name: Idle
     _metadata:
-      rid: 3529686465337884734
+      rid: 7816384711512293439
     motion:
       _asset: {fileID: 1827226128182048838, guid: a4b8f2deec6a99945987cfc59b1b4e54, type: 3}
   - name: Walk
     _metadata:
-      rid: 3529686465337884735
+      rid: 7816384711512293440
     motion:
       _asset: {fileID: 2571081563578608591, guid: eead3eb07cb89cb4eb25b3550df5e84b, type: 3}
   - name: Run
     _metadata:
-      rid: 3529686465337884733
+      rid: 7816384711512293441
     motion:
       _asset: {fileID: 1827226128182048838, guid: 6c670ea8c84cf324980a21b4b9b927a0, type: 3}
   references:
     version: 2
     RefIds:
-    - rid: 3529686465337884733
-      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+    - rid: 7816384711512293439
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        position: {x: 0.5, y: 0}
-    - rid: 3529686465337884734
-      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+        threshold: 0
+    - rid: 7816384711512293440
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        position: {x: 0, y: 0}
-    - rid: 3529686465337884735
-      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+        threshold: 2
+    - rid: 7816384711512293441
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        position: {x: 0.2, y: 0}
+        threshold: 4

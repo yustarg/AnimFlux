@@ -14,11 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.LocomotionConfig
   rootTree: {fileID: 11400000, guid: 53e483a013f530a4c9f8662d56de0e3c, type: 2}
   fallbackClip: {fileID: 0}
-  maxMoveSpeed: 4
+  maxMoveSpeed: 10
   maxForwardStrafe: 1
   maxStrafeDirection: 1
   maxInclineAngle: 30
+  floatBlendSource: 4
   speedDampTime: 0.2
   parameterDampTime: 0.1
   crossFadeDuration: 0.2
   enableRootMotion: 0
+  debugLog: 1
+  debugLogInterval: 1

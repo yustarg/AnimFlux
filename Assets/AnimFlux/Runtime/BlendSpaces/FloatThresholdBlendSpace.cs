@@ -7,7 +7,7 @@ namespace AnimFlux.Runtime
     [CreateAssetMenu(menuName = "AnimFlux/BlendSpaces/Float Threshold", fileName = "FloatThresholdBlendSpace")]
     public sealed class FloatThresholdBlendSpace : BlendSpaceDefinition
     {
-        public override Type ContextType => typeof(LocomotionContext);
+        public override Type ContextType => typeof(IFloatBlendProvider);
         public override Type MetadataType => typeof(FloatThresholdNodeMetadata);
 
         public override BlendNodeMetadata CreateDefaultMetadata() => new FloatThresholdNodeMetadata();
@@ -27,28 +27,44 @@ namespace AnimFlux.Runtime
         private sealed class Runtime : IBlendSpaceRuntime
         {
             private readonly float[] _thresholds;
+            private readonly bool _hasAny;
 
             public Runtime(IReadOnlyList<AnimationBlendNode> nodes)
             {
                 _thresholds = new float[nodes.Count];
+                _hasAny = nodes.Count > 0;
                 for (int i = 0; i < nodes.Count; i++)
                 {
                     var meta = nodes[i].Metadata as FloatThresholdNodeMetadata;
+                    if (meta == null)
+                    {
+                        Debug.LogWarning("[AnimFlux][FloatThreshold] Node metadata type mismatch. Resetting to default threshold=0.");
+                        nodes[i].SetMetadata(new FloatThresholdNodeMetadata());
+                        meta = nodes[i].Metadata as FloatThresholdNodeMetadata;
+                    }
                     _thresholds[i] = meta != null ? meta.threshold : 0f;
+                }
+
+                if (AnimFluxDebug.Enabled)
+                {
+                    var joined = _hasAny ? string.Join(", ", _thresholds) : "none";
+                    Debug.Log($"[AnimFlux][FloatThreshold] thresholds: {joined}");
                 }
             }
 
-            public Type ContextType => typeof(LocomotionContext);
+            public Type ContextType => typeof(IFloatBlendProvider);
 
             public void Evaluate(object context, float[] weights)
             {
-                if (context is not LocomotionContext lc || weights == null || weights.Length == 0) return;
-                var value = lc.SpeedNormalized; // default to speed; other usages can reuse the same field
+                if (context is not IFloatBlendProvider provider || weights == null || weights.Length == 0) return;
+                var value = provider.FloatBlend;
 
                 Array.Clear(weights, 0, weights.Length);
                 if (weights.Length == 1)
                 {
                     weights[0] = 1f;
+                    if (AnimFluxDebug.Enabled)
+                        Debug.Log("[AnimFlux][FloatThreshold] Single slot -> 1");
                     return;
                 }
 
@@ -76,18 +92,27 @@ namespace AnimFlux.Runtime
                 if (lower == -1 && upper == -1)
                 {
                     weights[0] = 1f;
+                    if (AnimFluxDebug.Enabled)
+                        Debug.Log("[AnimFlux][FloatThreshold] No thresholds found, fallback weights[0]=1");
                     return;
                 }
 
                 if (lower == upper || Mathf.Approximately(lowerVal, upperVal))
                 {
                     weights[lower] = 1f;
+                    if (AnimFluxDebug.Enabled)
+                        Debug.Log($"[AnimFlux][FloatThreshold] Exact match -> slot {lower} = 1 (value={value:F2})");
                     return;
                 }
 
                 var tBlend = Mathf.InverseLerp(lowerVal, upperVal, value);
                 weights[lower] = 1f - tBlend;
                 weights[upper] = tBlend;
+
+                if (AnimFluxDebug.Enabled)
+                {
+                    Debug.Log($"[AnimFlux][FloatThreshold] value={value:F2}, lower=({lower},{lowerVal:F2}), upper=({upper},{upperVal:F2}), weights[lower]={weights[lower]:F2}, weights[upper]={weights[upper]:F2}");
+                }
             }
 
             public void Dispose()

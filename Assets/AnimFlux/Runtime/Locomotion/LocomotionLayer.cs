@@ -39,6 +39,12 @@ namespace AnimFlux.Runtime
         private float _strafeDirVelocity;
         private float _inclineVelocity;
         private LocomotionContext _blendContext;
+        private readonly bool _debugLog;
+        private readonly float _debugInterval;
+        private float _debugTimer;
+        private bool _warnedNoPlayable;
+        private string _debugSource;
+        private readonly LocomotionConfig.FloatBlendSource _floatBlendSource;
 
         public LocomotionLayer(Animator animator, LocomotionConfig config, PlayableGraph graph, AnimationMixerPlayable baseLayerMixer)
         {
@@ -46,6 +52,9 @@ namespace AnimFlux.Runtime
             _config = config ? config : throw new ArgumentNullException(nameof(config));
             _graph = graph;
             _baseLayerMixer = baseLayerMixer;
+            _debugLog = config.debugLog;
+            _debugInterval = Mathf.Max(0.05f, config.debugLogInterval);
+            _floatBlendSource = config.floatBlendSource;
 
             if (!_graph.IsValid() || !_baseLayerMixer.IsValid())
             {
@@ -93,6 +102,7 @@ namespace AnimFlux.Runtime
             UpdateParameters(deltaTime);
 
             _rootTreeInstance?.Evaluate(_blendContext);
+            MaybeDebugLog(deltaTime);
         }
 
         public void Dispose()
@@ -127,6 +137,7 @@ namespace AnimFlux.Runtime
                 if (_rootTreeInstance.IsValid)
                 {
                     _boundPlayable = _rootTreeInstance.Playable;
+                    _debugSource = $"BlendTree:{_config.rootTree.name}";
                 }
                 else
                 {
@@ -143,15 +154,21 @@ namespace AnimFlux.Runtime
                 _fallbackClipPlayable.SetDuration(_config.fallbackClip.isLooping ? double.PositiveInfinity : _config.fallbackClip.length);
                 _fallbackClipPlayable.SetSpeed(1f);
                 _boundPlayable = _fallbackClipPlayable;
+                _debugSource = $"FallbackClip:{_config.fallbackClip.name}";
             }
 
             if (!_boundPlayable.IsValid())
             {
                 Debug.LogWarning("[AnimFlux] LocomotionLayer requires a root blend tree or fallback clip.");
+                _warnedNoPlayable = true;
                 return;
             }
 
             BindToBaseLayer(_boundPlayable);
+            if (_debugLog)
+            {
+                Debug.Log($"[AnimFlux][Locomotion] Bound playable: {_debugSource}");
+            }
         }
 
         private void BindToBaseLayer(Playable source)
@@ -203,7 +220,21 @@ namespace AnimFlux.Runtime
                 ForwardStrafeNormalized = normalizedForwardStrafe,
                 StrafeDirectionNormalized = normalizedStrafeDirection,
                 InclineNormalized = normalizedIncline,
-                IsStrafing = _isStrafing
+                IsStrafing = _isStrafing,
+                FloatBlend = SelectFloatBlend(normalizedSpeed, normalizedForwardStrafe, normalizedStrafeDirection, normalizedIncline)
+            };
+        }
+
+        private float SelectFloatBlend(float speed, float forwardStrafe, float strafeDir, float incline)
+        {
+            return _floatBlendSource switch
+            {
+                LocomotionConfig.FloatBlendSource.SpeedNormalized => speed,
+                LocomotionConfig.FloatBlendSource.ForwardStrafe => forwardStrafe,
+                LocomotionConfig.FloatBlendSource.StrafeDirection => strafeDir,
+                LocomotionConfig.FloatBlendSource.Incline => incline,
+                LocomotionConfig.FloatBlendSource.RawSpeed => _currentSpeed,
+                _ => speed
             };
         }
 
@@ -217,6 +248,16 @@ namespace AnimFlux.Runtime
         {
             if (!_animator) return;
             _animator.applyRootMotion = _config.enableRootMotion && _rootMotionEnabled;
+        }
+
+        private void MaybeDebugLog(float deltaTime)
+        {
+            if (!_debugLog) return;
+            _debugTimer += deltaTime;
+            if (_debugTimer < _debugInterval) return;
+            _debugTimer = 0f;
+            var source = string.IsNullOrEmpty(_debugSource) ? "None" : _debugSource;
+            Debug.Log($"[AnimFlux][Locomotion] valid={_boundPlayable.IsValid()}, source={source}, speed={_currentSpeed:F2}, desired={_desiredSpeed:F2}, normSpeed={_blendContext.SpeedNormalized:F2}, dir=({_blendContext.DirectionalBlend.x:F2},{_blendContext.DirectionalBlend.y:F2}), grounded={_isGrounded}, strafing={_isStrafing}");
         }
     }
 }
