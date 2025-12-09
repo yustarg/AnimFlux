@@ -9,6 +9,7 @@ namespace AnimFlux.Runtime
     {
         public override Type ContextType => typeof(IDirectionalBlendProvider);
         public override Type MetadataType => typeof(Directional2DNodeMetadata);
+        [SerializeField] private string _directionalParameter = "Directional";
 
         public override BlendNodeMetadata CreateDefaultMetadata()
         {
@@ -27,9 +28,11 @@ namespace AnimFlux.Runtime
         private sealed class Runtime : IBlendSpaceRuntime
         {
             private readonly Vector2[] _positions;
+            private readonly string _parameterName;
 
-            public Runtime(IReadOnlyList<AnimationBlendNode> nodes)
+            public Runtime(IReadOnlyList<AnimationBlendNode> nodes, string parameterName = null)
             {
+                _parameterName = parameterName;
                 _positions = new Vector2[nodes.Count];
                 for (int i = 0; i < nodes.Count; i++)
                 {
@@ -44,14 +47,27 @@ namespace AnimFlux.Runtime
 
             public void Evaluate(object context, float[] weights)
             {
-                if (context is not IDirectionalBlendProvider provider || weights == null || weights.Length == 0)
+                if (weights == null || weights.Length == 0) return;
+
+                Vector2 parameter;
+                if (context is IBlendParameterProvider paramProvider && !string.IsNullOrWhiteSpace(_parameterName))
+                {
+                    if (!paramProvider.TryGetVector2(_parameterName, out parameter))
+                    {
+                        parameter = context is IDirectionalBlendProvider p ? p.DirectionalBlend : Vector2.zero;
+                    }
+                }
+                else if (context is IDirectionalBlendProvider provider)
+                {
+                    parameter = provider.DirectionalBlend;
+                }
+                else
                 {
                     return;
                 }
 
                 Array.Clear(weights, 0, weights.Length);
 
-                var parameter = provider.DirectionalBlend;
                 var magnitude = parameter.magnitude;
                 var dir = magnitude > 0.0001f ? parameter / magnitude : Vector2.zero;
                 float total = 0f;

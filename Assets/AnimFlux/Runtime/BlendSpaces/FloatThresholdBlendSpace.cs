@@ -9,12 +9,14 @@ namespace AnimFlux.Runtime
     {
         public override Type ContextType => typeof(IFloatBlendProvider);
         public override Type MetadataType => typeof(FloatThresholdNodeMetadata);
+        
+        [SerializeField] private string _floatParameter = "SpeedNormalized";
 
         public override BlendNodeMetadata CreateDefaultMetadata() => new FloatThresholdNodeMetadata();
 
         internal override IBlendSpaceRuntime CreateRuntime(IReadOnlyList<AnimationBlendNode> nodes)
         {
-            return new Runtime(nodes);
+            return new Runtime(nodes, _floatParameter);
         }
 
         public override void EnsureNodeMetadata(AnimationBlendNode node)
@@ -28,9 +30,11 @@ namespace AnimFlux.Runtime
         {
             private readonly float[] _thresholds;
             private readonly bool _hasAny;
+            private readonly string _parameterName;
 
-            public Runtime(IReadOnlyList<AnimationBlendNode> nodes)
+            public Runtime(IReadOnlyList<AnimationBlendNode> nodes, string parameterName)
             {
+                _parameterName = parameterName;
                 _thresholds = new float[nodes.Count];
                 _hasAny = nodes.Count > 0;
                 for (int i = 0; i < nodes.Count; i++)
@@ -57,7 +61,19 @@ namespace AnimFlux.Runtime
             public void Evaluate(object context, float[] weights)
             {
                 if (context is not IFloatBlendProvider provider || weights == null || weights.Length == 0) return;
-                var value = provider.FloatBlend;
+                float value;
+
+                if (context is IBlendParameterProvider paramProvider && !string.IsNullOrWhiteSpace(_parameterName))
+                {
+                    if (!paramProvider.TryGetFloat(_parameterName, out value))
+                    {
+                        value = provider.FloatBlend;
+                    }
+                }
+                else
+                {
+                    value = provider.FloatBlend;
+                }
 
                 Array.Clear(weights, 0, weights.Length);
                 if (weights.Length == 1)

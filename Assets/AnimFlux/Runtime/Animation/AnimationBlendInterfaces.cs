@@ -25,5 +25,11 @@ namespace AnimFlux.Runtime
     {
         float FloatBlend { get; }
     }
+
+    public interface IBlendParameterProvider
+    {
+        bool TryGetFloat(string name, out float value);
+        bool TryGetVector2(string name, out Vector2 value);
+    }
 }
 

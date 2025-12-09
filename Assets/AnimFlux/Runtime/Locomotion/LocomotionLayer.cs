@@ -44,7 +44,6 @@ namespace AnimFlux.Runtime
         private float _debugTimer;
         private bool _warnedNoPlayable;
         private string _debugSource;
-        private readonly LocomotionConfig.FloatBlendSource _floatBlendSource;
 
         public LocomotionLayer(Animator animator, LocomotionConfig config, PlayableGraph graph, AnimationMixerPlayable baseLayerMixer)
         {
@@ -54,7 +53,6 @@ namespace AnimFlux.Runtime
             _baseLayerMixer = baseLayerMixer;
             _debugLog = config.debugLog;
             _debugInterval = Mathf.Max(0.05f, config.debugLogInterval);
-            _floatBlendSource = config.floatBlendSource;
 
             if (!_graph.IsValid() || !_baseLayerMixer.IsValid())
             {
@@ -221,21 +219,21 @@ namespace AnimFlux.Runtime
                 StrafeDirectionNormalized = normalizedStrafeDirection,
                 InclineNormalized = normalizedIncline,
                 IsStrafing = _isStrafing,
-                FloatBlend = SelectFloatBlend(normalizedSpeed, normalizedForwardStrafe, normalizedStrafeDirection, normalizedIncline)
+                FloatBlend = normalizedSpeed // default float channel; blend spaces可通过参数名访问其他值
             };
-        }
 
-        private float SelectFloatBlend(float speed, float forwardStrafe, float strafeDir, float incline)
-        {
-            return _floatBlendSource switch
-            {
-                LocomotionConfig.FloatBlendSource.SpeedNormalized => speed,
-                LocomotionConfig.FloatBlendSource.ForwardStrafe => forwardStrafe,
-                LocomotionConfig.FloatBlendSource.StrafeDirection => strafeDir,
-                LocomotionConfig.FloatBlendSource.Incline => incline,
-                LocomotionConfig.FloatBlendSource.RawSpeed => _currentSpeed,
-                _ => speed
-            };
+            _blendContext.ClearParameters();
+            // Populate defaults for easy reuse in BlendSpaces; users can reference by name.
+            _blendContext.SetFloat("SpeedNormalized", normalizedSpeed);
+            _blendContext.SetFloat("SpeedRaw", _currentSpeed);
+            _blendContext.SetFloat("ForwardStrafe", normalizedForwardStrafe);
+            _blendContext.SetFloat("StrafeDirection", normalizedStrafeDirection);
+            _blendContext.SetFloat("Incline", normalizedIncline);
+            _blendContext.SetFloat("IsStrafing", _isStrafing ? 1f : 0f);
+            _blendContext.SetFloat("FloatBlend", normalizedSpeed); // default float channel
+            _blendContext.SetVector2("Directional", directional);
+            _blendContext.SetVector2("Move", directional);
+            _blendContext.SetVector2("LocomotionDir", directional);
         }
 
         private static float NormalizeParameter(float value, float max)
