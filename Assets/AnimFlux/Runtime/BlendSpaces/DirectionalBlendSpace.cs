@@ -16,7 +16,16 @@ namespace AnimFlux.Runtime
             return new Directional2DNodeMetadata();
         }
 
-        internal override IBlendSpaceRuntime CreateRuntime(IReadOnlyList<AnimationBlendNode> nodes) => new Runtime(nodes);
+        internal override IBlendSpaceRuntime CreateRuntime(IReadOnlyList<AnimationBlendNode> nodes)
+            => new Runtime(nodes, _directionalParameter);
+
+        internal void SetParameterOverride(string vectorParamName)
+        {
+            if (!string.IsNullOrWhiteSpace(vectorParamName))
+            {
+                _directionalParameter = vectorParamName;
+            }
+        }
 
         public override void EnsureNodeMetadata(AnimationBlendNode node)
         {
@@ -49,22 +58,24 @@ namespace AnimFlux.Runtime
             {
                 if (weights == null || weights.Length == 0) return;
 
-                Vector2 parameter;
-                if (context is IBlendParameterProvider paramProvider && !string.IsNullOrWhiteSpace(_parameterName))
+                Vector2 parameter = Vector2.zero;
+                bool gotParam = false;
+
+                if (context is IBlendParameterProvider paramProvider)
                 {
-                    if (!paramProvider.TryGetVector2(_parameterName, out parameter))
+                    if (!string.IsNullOrWhiteSpace(_parameterName) && paramProvider.TryGetVector2(_parameterName, out parameter))
                     {
-                        parameter = context is IDirectionalBlendProvider p ? p.DirectionalBlend : Vector2.zero;
+                        gotParam = true;
                     }
                 }
-                else if (context is IDirectionalBlendProvider provider)
+
+                if (!gotParam && context is IDirectionalBlendProvider provider)
                 {
                     parameter = provider.DirectionalBlend;
+                    gotParam = true;
                 }
-                else
-                {
-                    return;
-                }
+
+                if (!gotParam) return;
 
                 Array.Clear(weights, 0, weights.Length);
 

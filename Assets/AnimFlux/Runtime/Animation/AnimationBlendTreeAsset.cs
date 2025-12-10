@@ -13,15 +13,27 @@ namespace AnimFlux.Runtime
     [CreateAssetMenu(menuName = "AnimFlux/Animation/Blend Tree", fileName = "AnimationBlendTree")]
     public class AnimationBlendTreeAsset : ScriptableObject, IAnimationBlendSource
     {
+        public enum BlendTreeDimension { OneD, TwoD }
+
+        [SerializeField] private BlendTreeDimension _dimension = BlendTreeDimension.TwoD;
         [SerializeField] private BlendSpaceDefinition _blendSpace;
+        [SerializeField] private AnimationParameterLibrary _parameterLibrary;
+        [SerializeField] private string _floatParameterOverride;
+        [SerializeField] private string _vectorXParameterOverride;
+        [SerializeField] private string _vectorYParameterOverride;
         [NonSerialized] private BlendSpaceDefinition _runtimeFallback;
         [SerializeField] private List<AnimationBlendNode> _nodes = new();
 
         public BlendSpaceDefinition BlendSpace => _blendSpace;
+        public AnimationParameterLibrary ParameterLibrary => _parameterLibrary;
         public IReadOnlyList<AnimationBlendNode> Nodes => _nodes;
+
+        private static readonly System.Collections.Generic.Stack<AnimationParameterLibrary> _libraryStack = new();
 
         public IAnimationBlendRuntime CreateRuntime(PlayableGraph graph)
         {
+            var parentLib = _libraryStack.Count > 0 ? _libraryStack.Peek() : null;
+            var effectiveLib = _parameterLibrary != null ? _parameterLibrary : parentLib;
             var blendSpace = ResolveBlendSpace();
             if (blendSpace == null)
             {
@@ -29,8 +41,17 @@ namespace AnimFlux.Runtime
                 return null;
             }
 
-            var instance = new AnimationBlendTreeInstance(graph, this);
-            return instance.IsValid ? instance : null;
+            _libraryStack.Push(effectiveLib);
+            try
+            {
+                ApplyParameterOverrides(blendSpace, effectiveLib);
+                var instance = new AnimationBlendTreeInstance(graph, this);
+                return instance.IsValid ? instance : null;
+            }
+            finally
+            {
+                _libraryStack.Pop();
+            }
         }
 
         private void OnDisable()
@@ -73,6 +94,26 @@ namespace AnimFlux.Runtime
             }
         }
 
+        private void ApplyParameterOverrides(BlendSpaceDefinition blendSpace, AnimationParameterLibrary library)
+        {
+            if (blendSpace is FloatThresholdBlendSpace fbs)
+            {
+                var paramName = !string.IsNullOrWhiteSpace(_floatParameterOverride)
+                    ? _floatParameterOverride
+                    : library != null && library.floatParameters.Count > 0
+                        ? library.floatParameters[0]
+                        : null;
+                if (!string.IsNullOrWhiteSpace(paramName))
+                {
+                    fbs.SetParameterOverride(paramName);
+                }
+            }
+            else if (blendSpace is Directional2DBlendSpace dbs)
+            {
+                dbs.SetParameterOverride("Directional");
+            }
+        }
+
         private static BlendNodeMetadata CloneMetadata(BlendNodeMetadata source)
         {
             if (source == null) return null;
@@ -87,12 +128,19 @@ namespace AnimFlux.Runtime
             }
         }
 
+        public void SetParameterLibrary(AnimationParameterLibrary library)
+        {
+            _parameterLibrary = library;
+        }
+
         internal BlendSpaceDefinition ResolveBlendSpace()
         {
             if (_blendSpace != null) return _blendSpace;
             if (_runtimeFallback == null)
             {
-                _runtimeFallback = ScriptableObject.CreateInstance<Directional2DBlendSpace>();
+                _runtimeFallback = _dimension == BlendTreeDimension.OneD
+                    ? ScriptableObject.CreateInstance<FloatThresholdBlendSpace>()
+                    : ScriptableObject.CreateInstance<Directional2DBlendSpace>() as BlendSpaceDefinition;
                 _runtimeFallback.hideFlags = HideFlags.HideAndDontSave;
             }
 

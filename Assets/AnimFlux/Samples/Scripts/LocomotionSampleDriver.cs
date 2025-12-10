@@ -34,6 +34,7 @@ namespace AnimFlux.Samples
         [SerializeField] private float forwardStrafeMaxAngle = 125f;
         [SerializeField] private float strafeDirectionDamp = 20f;
         [SerializeField] private float forwardStrafeDamp = 12f;
+        [SerializeField] private bool faceMoveDirection = true;
 
         [Header("Sample Input Mapping")]
         [SerializeField] private KeyCode sprintKey = KeyCode.LeftShift;
@@ -168,6 +169,7 @@ namespace AnimFlux.Samples
         private void UpdateFacing(Vector3 planarDir)
         {
             if (!facingRoot || planarDir.sqrMagnitude < 0.0001f) return;
+            if (!faceMoveDirection) return;
             var targetRotation = Quaternion.LookRotation(planarDir, Vector3.up);
             facingRoot.rotation = Quaternion.RotateTowards(facingRoot.rotation, targetRotation, turnSpeed * Time.deltaTime);
         }

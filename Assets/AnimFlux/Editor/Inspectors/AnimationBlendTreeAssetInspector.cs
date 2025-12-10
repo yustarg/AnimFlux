@@ -13,12 +13,20 @@ namespace AnimFlux.Editor
         private const float MetadataColumnWidth = 120f;
 
         private SerializedProperty _nodesProp;
-        private SerializedProperty _blendSpaceProp;
+        private SerializedProperty _dimensionProp;
+        private SerializedProperty _parameterLibraryProp;
+        private SerializedProperty _floatParamProp;
+        private SerializedProperty _vectorXParamProp;
+        private SerializedProperty _vectorYParamProp;
         private ReorderableList _nodeList;
 
         private void OnEnable()
         {
-            _blendSpaceProp = serializedObject.FindProperty("_blendSpace");
+            _dimensionProp = serializedObject.FindProperty("_dimension");
+            _parameterLibraryProp = serializedObject.FindProperty("_parameterLibrary");
+            _floatParamProp = serializedObject.FindProperty("_floatParameterOverride");
+            _vectorXParamProp = serializedObject.FindProperty("_vectorXParameterOverride");
+            _vectorYParamProp = serializedObject.FindProperty("_vectorYParameterOverride");
             _nodesProp = serializedObject.FindProperty("_nodes");
             _nodeList = new ReorderableList(serializedObject, _nodesProp, true, true, true, true)
             {
@@ -47,7 +55,10 @@ namespace AnimFlux.Editor
         {
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(_blendSpaceProp);
+            EditorGUILayout.PropertyField(_dimensionProp, new GUIContent("Dimension"));
+            EditorGUILayout.PropertyField(_parameterLibraryProp, new GUIContent("Parameter Library"));
+            DrawParameterPopup("Float Parameter (1D)", _floatParamProp);
+
             EditorGUILayout.Space(4f);
             _nodeList.DoLayoutList();
 
@@ -92,6 +103,8 @@ namespace AnimFlux.Editor
             nameProp.stringValue = EditorGUI.TextField(nameRect, GUIContent.none, nameProp.stringValue);
 
             DrawMetadata(metadataRect, metadataProp);
+
+            TryInheritParameterLibrary(motionProp);
         }
 
         private void DrawMetadata(Rect rect, SerializedProperty metadataProp)
@@ -141,6 +154,45 @@ namespace AnimFlux.Editor
             }
 
             return false;
+        }
+
+        private void DrawParameterPopup(string label, SerializedProperty prop)
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.PrefixLabel(label);
+
+            var library = _parameterLibraryProp.objectReferenceValue as AnimationParameterLibrary;
+            var options = library != null && library.floatParameters != null ? library.floatParameters : null;
+            if (options != null && options.Count > 0)
+            {
+                var current = prop.stringValue;
+                var index = Mathf.Max(0, options.IndexOf(current));
+                index = EditorGUILayout.Popup(index, options.ToArray());
+                prop.stringValue = options[index];
+            }
+            else
+            {
+                prop.stringValue = EditorGUILayout.TextField(prop.stringValue);
+            }
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void TryInheritParameterLibrary(SerializedProperty motionProp)
+        {
+            if (motionProp == null) return;
+            var assetProp = motionProp.FindPropertyRelative("_asset");
+            if (assetProp == null) return;
+            var childObj = assetProp.objectReferenceValue as AnimationBlendTreeAsset;
+            if (childObj == null) return;
+
+            var parent = target as AnimationBlendTreeAsset;
+            if (parent == null || parent.ParameterLibrary == null) return;
+            if (childObj.ParameterLibrary != null) return;
+
+            Undo.RecordObject(childObj, "Inherit Parameter Library");
+            childObj.SetParameterLibrary(parent.ParameterLibrary);
+            EditorUtility.SetDirty(childObj);
         }
     }
 }

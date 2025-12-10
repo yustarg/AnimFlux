@@ -9,14 +9,21 @@ namespace AnimFlux.Runtime
     {
         public override Type ContextType => typeof(IFloatBlendProvider);
         public override Type MetadataType => typeof(FloatThresholdNodeMetadata);
-        
-        [SerializeField] private string _floatParameter = "SpeedNormalized";
+        [SerializeField] private string _parameterName = "SpeedNormalized";
 
         public override BlendNodeMetadata CreateDefaultMetadata() => new FloatThresholdNodeMetadata();
 
         internal override IBlendSpaceRuntime CreateRuntime(IReadOnlyList<AnimationBlendNode> nodes)
         {
-            return new Runtime(nodes, _floatParameter);
+            return new Runtime(nodes, _parameterName);
+        }
+
+        internal void SetParameterOverride(string paramName)
+        {
+            if (!string.IsNullOrWhiteSpace(paramName))
+            {
+                _parameterName = paramName;
+            }
         }
 
         public override void EnsureNodeMetadata(AnimationBlendNode node)
