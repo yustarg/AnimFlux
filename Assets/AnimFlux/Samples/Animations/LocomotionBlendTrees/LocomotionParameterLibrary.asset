@@ -12,5 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 635597add32c848f7b3c5beeb740bc6c, type: 3}
   m_Name: LocomotionParameterLibrary
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationParameterLibrary
-  floatParameters: []
-  vector2Parameters: []
+  floatParameters:
+  - MoveSpeed
+  - IsStrafing
+  - ForwardStrafe
+  - StrafeDirectionX
+  - StrafeDirectionZ
+  - InclineAngle

@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
   m_Name: Locomotion_BlendTree
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
+  _dimension: 0
   _blendSpace: {fileID: 11400000, guid: ed202440fb020e744924d40bb87de27c, type: 2}
+  _parameterLibrary: {fileID: 11400000, guid: 60077ce38c1a64acf9df35f0ab1d6e95, type: 2}
+  _floatParameterOverride: MoveSpeed
+  _vectorXParameterOverride: 
+  _vectorYParameterOverride: 
   _nodes:
   - name: Idle
     _metadata:
@@ -23,12 +28,12 @@ MonoBehaviour:
     _metadata:
       rid: 7816384711512293440
     motion:
-      _asset: {fileID: 2571081563578608591, guid: eead3eb07cb89cb4eb25b3550df5e84b, type: 3}
+      _asset: {fileID: 11400000, guid: 5608c0774f41e4842b903925f9ba96c4, type: 2}
   - name: Run
     _metadata:
       rid: 7816384711512293441
     motion:
-      _asset: {fileID: 1827226128182048838, guid: 6c670ea8c84cf324980a21b4b9b927a0, type: 3}
+      _asset: {fileID: 11400000, guid: 4cc7386e2eb514073a9fd349af7bf97e, type: 2}
   references:
     version: 2
     RefIds:
@@ -39,8 +44,8 @@ MonoBehaviour:
     - rid: 7816384711512293440
       type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        threshold: 2
+        threshold: 1.4
     - rid: 7816384711512293441
       type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        threshold: 4
+        threshold: 2.5

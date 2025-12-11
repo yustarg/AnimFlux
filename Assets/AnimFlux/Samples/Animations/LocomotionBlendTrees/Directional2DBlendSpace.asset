@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c886d15ee452d409956ad017e1e9f6, type: 3}
   m_Name: Directional2DBlendSpace
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.Directional2DBlendSpace
+  _directionalParameter: 

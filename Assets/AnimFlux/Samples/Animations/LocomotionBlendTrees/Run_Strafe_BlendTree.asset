@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
   m_Name: Run_Strafe_BlendTree
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
+  _dimension: 0
   _blendSpace: {fileID: 0}
+  _parameterLibrary: {fileID: 11400000, guid: 60077ce38c1a64acf9df35f0ab1d6e95, type: 2}
+  _floatParameterOverride: MoveSpeed
+  _vectorXParameterOverride: MoveSpeed
+  _vectorYParameterOverride: MoveSpeed
   _nodes: []
   references:
     version: 2
