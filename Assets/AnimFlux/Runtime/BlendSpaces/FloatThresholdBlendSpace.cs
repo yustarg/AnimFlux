@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace AnimFlux.Runtime
 {
-    [CreateAssetMenu(menuName = "AnimFlux/BlendSpaces/Float Threshold", fileName = "FloatThresholdBlendSpace")]
+    [Serializable]
     public sealed class FloatThresholdBlendSpace : BlendSpaceDefinition
     {
         public override Type ContextType => typeof(IFloatBlendProvider);
         public override Type MetadataType => typeof(FloatThresholdNodeMetadata);
-        [SerializeField] private string _parameterName = "SpeedNormalized";
+        private string _parameterName = "SpeedNormalized"; // hidden; overridden by tree
 
         public override BlendNodeMetadata CreateDefaultMetadata() => new FloatThresholdNodeMetadata();
 

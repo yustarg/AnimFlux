@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace AnimFlux.Runtime
 {
-    [CreateAssetMenu(menuName = "AnimFlux/BlendSpaces/Directional 2D", fileName = "Directional2DBlendSpace")]
+    [Serializable]
     public sealed class Directional2DBlendSpace : BlendSpaceDefinition
     {
         public override Type ContextType => typeof(IDirectionalBlendProvider);
         public override Type MetadataType => typeof(Directional2DNodeMetadata);
-        [SerializeField] private string _directionalParameter = "Directional";
+        private string _directionalParameter = "Directional"; // hidden; overridden by tree
 
         public override BlendNodeMetadata CreateDefaultMetadata()
         {

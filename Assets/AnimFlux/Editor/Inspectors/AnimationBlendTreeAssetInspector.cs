@@ -57,7 +57,16 @@ namespace AnimFlux.Editor
 
             EditorGUILayout.PropertyField(_dimensionProp, new GUIContent("Dimension"));
             EditorGUILayout.PropertyField(_parameterLibraryProp, new GUIContent("Parameter Library"));
-            DrawParameterPopup("Float Parameter (1D)", _floatParamProp);
+            var dim = (AnimationBlendTreeAsset.BlendTreeDimension)_dimensionProp.enumValueIndex;
+            if (dim == AnimationBlendTreeAsset.BlendTreeDimension.OneD)
+            {
+                DrawParameterPopup("Float Parameter (1D)", _floatParamProp);
+            }
+            else
+            {
+                DrawParameterPopup("Vector X Parameter", _vectorXParamProp);
+                DrawParameterPopup("Vector Y Parameter", _vectorYParamProp);
+            }
 
             EditorGUILayout.Space(4f);
             _nodeList.DoLayoutList();
@@ -109,6 +118,20 @@ namespace AnimFlux.Editor
 
         private void DrawMetadata(Rect rect, SerializedProperty metadataProp)
         {
+            var dim = (AnimationBlendTreeAsset.BlendTreeDimension)_dimensionProp.enumValueIndex;
+
+            // Auto-fix metadata type when dimension changes.
+            if (dim == AnimationBlendTreeAsset.BlendTreeDimension.TwoD && IsFloatThreshold(metadataProp, out _))
+            {
+                metadataProp.managedReferenceValue = new Directional2DNodeMetadata();
+                metadataProp.serializedObject.ApplyModifiedProperties();
+            }
+            else if (dim == AnimationBlendTreeAsset.BlendTreeDimension.OneD && IsDirectional(metadataProp, out _))
+            {
+                metadataProp.managedReferenceValue = new FloatThresholdNodeMetadata();
+                metadataProp.serializedObject.ApplyModifiedProperties();
+            }
+
             if (IsDirectional(metadataProp, out var positionProp))
             {
                 var halfWidth = rect.width * 0.5f - 2f;

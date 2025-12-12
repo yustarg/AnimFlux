@@ -16,7 +16,7 @@ namespace AnimFlux.Runtime
         public enum BlendTreeDimension { OneD, TwoD }
 
         [SerializeField] private BlendTreeDimension _dimension = BlendTreeDimension.TwoD;
-        [SerializeField] private BlendSpaceDefinition _blendSpace;
+        [SerializeReference] private BlendSpaceDefinition _blendSpace;
         [SerializeField] private AnimationParameterLibrary _parameterLibrary;
         [SerializeField] private string _floatParameterOverride;
         [SerializeField] private string _vectorXParameterOverride;
@@ -56,11 +56,7 @@ namespace AnimFlux.Runtime
 
         private void OnDisable()
         {
-            if (_runtimeFallback != null)
-            {
-                DestroyImmediate(_runtimeFallback);
-                _runtimeFallback = null;
-            }
+            _runtimeFallback = null;
         }
 
         private void OnValidate()
@@ -135,16 +131,20 @@ namespace AnimFlux.Runtime
 
         internal BlendSpaceDefinition ResolveBlendSpace()
         {
-            if (_blendSpace != null) return _blendSpace;
-            if (_runtimeFallback == null)
+            if (_blendSpace == null || !IsBlendSpaceMatchingDimension(_blendSpace, _dimension))
             {
-                _runtimeFallback = _dimension == BlendTreeDimension.OneD
-                    ? ScriptableObject.CreateInstance<FloatThresholdBlendSpace>()
-                    : ScriptableObject.CreateInstance<Directional2DBlendSpace>() as BlendSpaceDefinition;
-                _runtimeFallback.hideFlags = HideFlags.HideAndDontSave;
+                _blendSpace = _dimension == BlendTreeDimension.OneD
+                    ? new FloatThresholdBlendSpace()
+                    : new Directional2DBlendSpace() as BlendSpaceDefinition;
             }
 
-            return _runtimeFallback;
+            return _blendSpace;
+        }
+
+        private static bool IsBlendSpaceMatchingDimension(BlendSpaceDefinition blendSpace, BlendTreeDimension dimension)
+        {
+            return (dimension == BlendTreeDimension.OneD && blendSpace is FloatThresholdBlendSpace)
+                   || (dimension == BlendTreeDimension.TwoD && blendSpace is Directional2DBlendSpace);
         }
     }
 
@@ -170,7 +170,8 @@ namespace AnimFlux.Runtime
     {
     }
 
-    public abstract class BlendSpaceDefinition : ScriptableObject
+    [Serializable]
+    public abstract class BlendSpaceDefinition
     {
         public abstract Type ContextType { get; }
         public abstract Type MetadataType { get; }

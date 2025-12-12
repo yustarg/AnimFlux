@@ -12,40 +12,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
   m_Name: Locomotion_BlendTree
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
-  _dimension: 0
-  _blendSpace: {fileID: 11400000, guid: ed202440fb020e744924d40bb87de27c, type: 2}
+  _dimension: 1
+  _blendSpace:
+    rid: 7899689988704436305
   _parameterLibrary: {fileID: 11400000, guid: 60077ce38c1a64acf9df35f0ab1d6e95, type: 2}
   _floatParameterOverride: MoveSpeed
-  _vectorXParameterOverride: 
-  _vectorYParameterOverride: 
+  _vectorXParameterOverride: MoveSpeed
+  _vectorYParameterOverride: IsStrafing
   _nodes:
   - name: Idle
     _metadata:
-      rid: 7816384711512293439
+      rid: 7899689988704436302
     motion:
       _asset: {fileID: 1827226128182048838, guid: a4b8f2deec6a99945987cfc59b1b4e54, type: 3}
   - name: Walk
     _metadata:
-      rid: 7816384711512293440
+      rid: 7899689988704436303
     motion:
       _asset: {fileID: 11400000, guid: 5608c0774f41e4842b903925f9ba96c4, type: 2}
   - name: Run
     _metadata:
-      rid: 7816384711512293441
+      rid: 7899689988704436304
     motion:
       _asset: {fileID: 11400000, guid: 4cc7386e2eb514073a9fd349af7bf97e, type: 2}
   references:
     version: 2
     RefIds:
-    - rid: 7816384711512293439
-      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+    - rid: 7899689988704436302
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        threshold: 0
-    - rid: 7816384711512293440
-      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+        position: {x: 0, y: 1}
+    - rid: 7899689988704436303
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        threshold: 1.4
-    - rid: 7816384711512293441
-      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+        position: {x: 1.4, y: 1}
+    - rid: 7899689988704436304
+      type: {class: Directional2DNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
       data:
-        threshold: 2.5
+        position: {x: 2.5, y: 1}
+    - rid: 7899689988704436305
+      type: {class: Directional2DBlendSpace, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data: 

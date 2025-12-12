@@ -12,13 +12,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
   m_Name: Walk_Strafe_BlendTree
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
-  _dimension: 1
-  _blendSpace: {fileID: 0}
+  _dimension: 0
+  _blendSpace:
+    rid: 7899689988704436306
   _parameterLibrary: {fileID: 11400000, guid: 60077ce38c1a64acf9df35f0ab1d6e95, type: 2}
-  _floatParameterOverride: 
-  _vectorXParameterOverride: 
-  _vectorYParameterOverride: 
-  _nodes: []
+  _floatParameterOverride: ForwardStrafe
+  _vectorXParameterOverride: MoveSpeed
+  _vectorYParameterOverride: MoveSpeed
+  _nodes:
+  - name: Node 1
+    _metadata:
+      rid: 7899689988704436307
+    motion:
+      _asset: {fileID: 11400000, guid: 1e2beff31c34646e5adfb9602083bf38, type: 2}
+  - name: Node 2
+    _metadata:
+      rid: 7899689988704436308
+    motion:
+      _asset: {fileID: 11400000, guid: daf7f9122de2144c0ac96cd629266fdf, type: 2}
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 7899689988704436306
+      type: {class: FloatThresholdBlendSpace, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data: 
+    - rid: 7899689988704436307
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        threshold: 0
+    - rid: 7899689988704436308
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        threshold: 1
