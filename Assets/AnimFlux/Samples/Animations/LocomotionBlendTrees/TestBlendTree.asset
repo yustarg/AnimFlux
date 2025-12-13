@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
+  m_Name: TestBlendTree
+  m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
+  _dimension: 0
+  _blendSpace:
+    rid: 7899690057613180929
+  _parameterLibrary: {fileID: 11400000, guid: 60077ce38c1a64acf9df35f0ab1d6e95, type: 2}
+  _floatParameterOverride: MoveSpeed
+  _vectorXParameterOverride: 
+  _vectorYParameterOverride: 
+  _nodes:
+  - name: Node 1
+    _metadata:
+      rid: 7899690057613180930
+    motion:
+      _asset: {fileID: 1827226128182048838, guid: a4b8f2deec6a99945987cfc59b1b4e54, type: 3}
+  - name: Node 2
+    _metadata:
+      rid: 7899690057613180931
+    motion:
+      _asset: {fileID: 2571081563578608591, guid: eead3eb07cb89cb4eb25b3550df5e84b, type: 3}
+  - name: Node 3
+    _metadata:
+      rid: 7899690057613180932
+    motion:
+      _asset: {fileID: 1827226128182048838, guid: 6c670ea8c84cf324980a21b4b9b927a0, type: 3}
+  references:
+    version: 2
+    RefIds:
+    - rid: 7899690057613180929
+      type: {class: FloatThresholdBlendSpace, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data: 
+    - rid: 7899690057613180930
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        threshold: 0
+    - rid: 7899690057613180931
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        threshold: 1.4
+    - rid: 7899690057613180932
+      type: {class: FloatThresholdNodeMetadata, ns: AnimFlux.Runtime, asm: NewAssembly}
+      data:
+        threshold: 2.6

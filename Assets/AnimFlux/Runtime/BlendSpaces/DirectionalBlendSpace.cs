@@ -10,6 +10,8 @@ namespace AnimFlux.Runtime
         public override Type ContextType => typeof(IDirectionalBlendProvider);
         public override Type MetadataType => typeof(Directional2DNodeMetadata);
         private string _directionalParameter = "Directional"; // hidden; overridden by tree
+        private string _floatXParameter = string.Empty;
+        private string _floatYParameter = string.Empty;
 
         public override BlendNodeMetadata CreateDefaultMetadata()
         {
@@ -17,13 +19,21 @@ namespace AnimFlux.Runtime
         }
 
         internal override IBlendSpaceRuntime CreateRuntime(IReadOnlyList<AnimationBlendNode> nodes)
-            => new Runtime(nodes, _directionalParameter);
+            => new Runtime(nodes, _directionalParameter, _floatXParameter, _floatYParameter);
 
-        internal void SetParameterOverride(string vectorParamName)
+        internal void SetParameterOverride(string vectorParamName, string floatXParamName = null, string floatYParamName = null)
         {
             if (!string.IsNullOrWhiteSpace(vectorParamName))
             {
                 _directionalParameter = vectorParamName;
+            }
+            if (!string.IsNullOrWhiteSpace(floatXParamName))
+            {
+                _floatXParameter = floatXParamName;
+            }
+            if (!string.IsNullOrWhiteSpace(floatYParamName))
+            {
+                _floatYParameter = floatYParamName;
             }
         }
 
@@ -38,10 +48,14 @@ namespace AnimFlux.Runtime
         {
             private readonly Vector2[] _positions;
             private readonly string _parameterName;
+            private readonly string _floatXName;
+            private readonly string _floatYName;
 
-            public Runtime(IReadOnlyList<AnimationBlendNode> nodes, string parameterName = null)
+            public Runtime(IReadOnlyList<AnimationBlendNode> nodes, string parameterName = null, string floatX = null, string floatY = null)
             {
                 _parameterName = parameterName;
+                _floatXName = floatX;
+                _floatYName = floatY;
                 _positions = new Vector2[nodes.Count];
                 for (int i = 0; i < nodes.Count; i++)
                 {
@@ -65,6 +79,13 @@ namespace AnimFlux.Runtime
                 {
                     if (!string.IsNullOrWhiteSpace(_parameterName) && paramProvider.TryGetVector2(_parameterName, out parameter))
                     {
+                        gotParam = true;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(_floatXName) && !string.IsNullOrWhiteSpace(_floatYName)
+                             && paramProvider.TryGetFloat(_floatXName, out var fx)
+                             && paramProvider.TryGetFloat(_floatYName, out var fy))
+                    {
+                        parameter = new Vector2(fx, fy);
                         gotParam = true;
                     }
                 }

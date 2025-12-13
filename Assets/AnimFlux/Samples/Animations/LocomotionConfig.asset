@@ -12,13 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0f8df93147e34470aebec9cc8a29060, type: 3}
   m_Name: LocomotionConfig
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.LocomotionConfig
-  rootTree: {fileID: 11400000, guid: 53e483a013f530a4c9f8662d56de0e3c, type: 2}
+  rootTree: {fileID: 11400000, guid: 04d734b05935d42dea58dfb512458d03, type: 2}
   fallbackClip: {fileID: 0}
   maxMoveSpeed: 10
   maxForwardStrafe: 1
   maxStrafeDirection: 1
   maxInclineAngle: 30
-  floatBlendSource: 4
   speedDampTime: 0.2
   parameterDampTime: 0.1
   crossFadeDuration: 0.2

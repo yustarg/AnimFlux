@@ -45,7 +45,7 @@ namespace AnimFlux.Runtime
             try
             {
                 ApplyParameterOverrides(blendSpace, effectiveLib);
-                var instance = new AnimationBlendTreeInstance(graph, this);
+                var instance = new AnimationBlendTreeInstance(graph, this, blendSpace);
                 return instance.IsValid ? instance : null;
             }
             finally
@@ -64,6 +64,9 @@ namespace AnimFlux.Runtime
             if (_nodes == null) _nodes = new List<AnimationBlendNode>();
             var blendSpace = ResolveBlendSpace();
             if (blendSpace == null) return;
+
+            // Apply parameter overrides in edit-time so the serialized blendSpace carries the correct names.
+            ApplyParameterOverrides(blendSpace, _parameterLibrary);
 
             var seen = new HashSet<BlendNodeMetadata>();
             for (int i = _nodes.Count - 1; i >= 0; i--)
@@ -102,11 +105,35 @@ namespace AnimFlux.Runtime
                 if (!string.IsNullOrWhiteSpace(paramName))
                 {
                     fbs.SetParameterOverride(paramName);
+                    if (AnimFluxDebug.Enabled)
+                    {
+                        Debug.Log($"[AnimFlux][BlendTree] Applied Float param '{paramName}'");
+                    }
+                }
+                else if (AnimFluxDebug.Enabled)
+                {
+                    Debug.Log("[AnimFlux][BlendTree] No float param override found; using default");
                 }
             }
             else if (blendSpace is Directional2DBlendSpace dbs)
             {
-                dbs.SetParameterOverride("Directional");
+                var xName = !string.IsNullOrWhiteSpace(_vectorXParameterOverride)
+                    ? _vectorXParameterOverride
+                    : library != null && library.floatParameters.Count > 0
+                        ? library.floatParameters[0]
+                        : null;
+
+                var yName = !string.IsNullOrWhiteSpace(_vectorYParameterOverride)
+                    ? _vectorYParameterOverride
+                    : library != null && library.floatParameters.Count > 1
+                        ? library.floatParameters[1]
+                        : null;
+
+                dbs.SetParameterOverride("Directional", xName, yName);
+                if (AnimFluxDebug.Enabled)
+                {
+                    Debug.Log($"[AnimFlux][BlendTree] Applied Directional params V2='Directional', X='{xName}', Y='{yName}'");
+                }
             }
         }
 

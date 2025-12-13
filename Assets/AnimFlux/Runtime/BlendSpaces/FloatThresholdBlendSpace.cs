@@ -82,6 +82,8 @@ namespace AnimFlux.Runtime
                     value = provider.FloatBlend;
                 }
 
+                Debug.Log($"[AnimFlux][FloatThresholdBlendSpace] _parameterName {_parameterName} value {value}");
+                
                 Array.Clear(weights, 0, weights.Length);
                 if (weights.Length == 1)
                 {

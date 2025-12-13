@@ -18,11 +18,11 @@ namespace AnimFlux.Runtime
         public Playable Playable => _mixer;
         public Type ContextType => _blendSpaceRuntime?.ContextType ?? typeof(object);
 
-        public AnimationBlendTreeInstance(PlayableGraph graph, AnimationBlendTreeAsset asset)
+        public AnimationBlendTreeInstance(PlayableGraph graph, AnimationBlendTreeAsset asset, BlendSpaceDefinition blendSpaceOverride = null)
         {
             _graph = graph;
 
-            var blendSpace = asset?.ResolveBlendSpace();
+            var blendSpace = blendSpaceOverride ?? asset?.ResolveBlendSpace();
             if (!graph.IsValid() || blendSpace == null)
             {
                 _children = Array.Empty<ChildSlot>();
@@ -66,10 +66,10 @@ namespace AnimFlux.Runtime
                 _mixer.SetInputWeight(i, _weights[i]);
             }
 
-            if (AnimFluxDebug.Enabled)
-            {
-                Debug.Log($"[AnimFlux][BlendTreeInstance] children={_children.Length}, weights=[{string.Join(", ", _weights)}]");
-            }
+            // if (AnimFluxDebug.Enabled)
+            // {
+            //     Debug.Log($"[AnimFlux][BlendTreeInstance] children={_children.Length}, weights=[{string.Join(", ", _weights)}]");
+            // }
         }
 
         public void Dispose()
