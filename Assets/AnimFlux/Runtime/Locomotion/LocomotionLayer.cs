@@ -225,7 +225,7 @@ namespace AnimFlux.Runtime
             _blendContext.ClearParameters();
             // Populate defaults for easy reuse in BlendSpaces; users can reference by name.
             _blendContext.SetFloat("SpeedNormalized", normalizedSpeed);
-            _blendContext.SetFloat("SpeedRaw", _currentSpeed);
+            _blendContext.SetFloat("MoveSpeed", _currentSpeed);
             _blendContext.SetFloat("ForwardStrafe", normalizedForwardStrafe);
             _blendContext.SetFloat("StrafeDirection", normalizedStrafeDirection);
             _blendContext.SetFloat("Incline", normalizedIncline);

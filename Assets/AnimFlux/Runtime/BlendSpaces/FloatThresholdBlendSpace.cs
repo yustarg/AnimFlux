@@ -88,8 +88,6 @@ namespace AnimFlux.Runtime
                 if (weights.Length == 1)
                 {
                     weights[0] = 1f;
-                    if (AnimFluxDebug.Enabled)
-                        Debug.Log("[AnimFlux][FloatThreshold] Single slot -> 1");
                     return;
                 }
 
@@ -117,16 +115,12 @@ namespace AnimFlux.Runtime
                 if (lower == -1 && upper == -1)
                 {
                     weights[0] = 1f;
-                    if (AnimFluxDebug.Enabled)
-                        Debug.Log("[AnimFlux][FloatThreshold] No thresholds found, fallback weights[0]=1");
                     return;
                 }
 
                 if (lower == upper || Mathf.Approximately(lowerVal, upperVal))
                 {
                     weights[lower] = 1f;
-                    if (AnimFluxDebug.Enabled)
-                        Debug.Log($"[AnimFlux][FloatThreshold] Exact match -> slot {lower} = 1 (value={value:F2})");
                     return;
                 }
 

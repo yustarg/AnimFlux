@@ -129,8 +129,10 @@ namespace AnimFlux.Samples
             var angle = Vector3.SignedAngle(characterForward, directionForward, Vector3.up);
             var targetForwardStrafe = isStrafing && angle > forwardStrafeMinAngle && angle < forwardStrafeMaxAngle ? 1f : 0f;
 
+            // Match Synty sample behavior: smooth but responsive
             _currentStrafeDirection = Mathf.Lerp(_currentStrafeDirection, targetStrafeX, strafeDirectionDamp * deltaTime);
-            _currentForwardStrafe = Mathf.Lerp(_currentForwardStrafe, targetForwardStrafe, forwardStrafeDamp * deltaTime);
+            float t = Mathf.Clamp01(forwardStrafeDamp * deltaTime);
+            _currentForwardStrafe = Mathf.SmoothStep(_currentForwardStrafe, targetForwardStrafe, t);
 
             _controller.SetForwardStrafe(_currentForwardStrafe);
             _controller.SetStrafeDirection(_currentStrafeDirection);

@@ -587,10 +587,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5e499374f253bf4cb2e368bcd905ef6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimFlux.Samples.LocomotionSampleDriver
-  maxWalkSpeed: 10
+  maxWalkSpeed: 5
   sprintMultiplier: 3
-  acceleration: 8
-  deceleration: 10
+  acceleration: 2
+  deceleration: 3
   turnSpeed: 540
   facingRoot: {fileID: 0}
   cameraTransform: {fileID: 961739753}

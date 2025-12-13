@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 015db0cf179b47b4f8769b4e560cece0, type: 3}
-  m_Name: TestBlendTree
+  m_Name: TestBlendTree1D
   m_EditorClassIdentifier: NewAssembly::AnimFlux.Runtime.AnimationBlendTreeAsset
   _dimension: 0
   _blendSpace:
